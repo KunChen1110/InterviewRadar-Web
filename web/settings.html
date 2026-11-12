@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账户与数据 - InterviewRadar</title>
+  <link rel="stylesheet" href="common.css">
+  <style>.settings-wrap { max-width: 680px; margin: 26px auto; } .danger { border-color: #ffc7c7; } code { user-select: all; }</style>
+</head>
+<body>
+  <div id="topbar"></div>
+  <main class="settings-wrap">
+    <section class="card">
+      <h3>账户与数据</h3>
+      <p class="muted">简历只在创建面试时用于提取最小化资料卡，随后不会保存。检索与运营指标不使用完整简历或回答原文；面试记录会保存在你的账户中，便于继续和复盘。你可以随时永久删除账户及所有面试数据。</p>
+      <button class="btn sm secondary" id="exportDataBtn" style="margin-top:10px;">下载我的数据</button>
+    </section>
+    <section class="card" style="margin-top:16px;">
+      <h3>修改密码</h3>
+      <p class="muted">修改成功后，所有设备都需要用新密码重新登录。</p>
+      <input id="currentPassword" type="password" autocomplete="current-password" placeholder="当前密码" style="display:block;width:100%;box-sizing:border-box;margin:8px 0;">
+      <input id="newPassword" type="password" autocomplete="new-password" placeholder="新密码（至少 8 位）" style="display:block;width:100%;box-sizing:border-box;margin:8px 0 12px;">
+      <button class="btn sm primary" id="passwordBtn">修改密码</button>
+    </section>
+    <section class="card danger" style="margin-top:16px;">
+      <h3>永久删除账户</h3>
+      <p class="muted">此操作会删除账户、登录令牌、面试记录、报告、回答、投稿及反馈，且无法恢复。人工导入的公共题库不会受影响。</p>
+      <label for="confirmPhrase">输入 <code>DELETE_MY_ACCOUNT</code> 确认</label>
+      <input id="confirmPhrase" autocomplete="off" style="display:block;width:100%;box-sizing:border-box;margin:8px 0 12px;" placeholder="DELETE_MY_ACCOUNT">
+      <button class="btn secondary" id="deleteBtn">永久删除我的数据</button>
+    </section>
+  </main>
+  <script src="common.js"></script>
+  <script>
+    const IR_OK = IR.requireAuth();
+    IR.renderTopbar("");
+    document.getElementById("exportDataBtn").onclick = async () => {
+      try {
+        const response = await fetch("../api/account/data/export", {headers: {Authorization: "Bearer " + IR.getToken()}});
+        if (!response.ok) throw new Error("数据导出失败");
+        const blob = await response.blob(); const url = URL.createObjectURL(blob);
+        const link = document.createElement("a"); link.href = url; link.download = "InterviewRadar-我的数据.json"; link.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { IR.toast(e.message, true); }
+    };
+    document.getElementById("passwordBtn").onclick = async () => {
+      try {
+        await IR.api("account/password", "POST", {
+          current_password: document.getElementById("currentPassword").value,
+          new_password: document.getElementById("newPassword").value,
+        });
+        IR.setToken("");
+        location.href = "auth.html";
+      } catch (e) { IR.toast(e.message, true); }
+    };
+    document.getElementById("deleteBtn").onclick = async () => {
+      const confirmation = document.getElementById("confirmPhrase").value;
+      if (confirmation !== "DELETE_MY_ACCOUNT") { IR.toast("请准确输入确认短语", true); return; }
+      if (!confirm("确定永久删除吗？这不能撤销。")) return;
+      try {
+        await IR.api("account/data", "DELETE", {confirmation});
+        IR.setToken("");
+        location.href = "landing.html";
+      } catch (e) { IR.toast(e.message, true); }
+    };
+  </script>
+</body>
+</html>

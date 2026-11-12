@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>面经社区 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 18px; }
+    .filter-bar input { flex: 1; max-width: 320px; border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; font-size: 14px; background: #fff; }
+    .post-card { background: #fff; border-radius: 16px; padding: 20px 22px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+    .post-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .post-head .co { font-size: 15.5px; font-weight: 700; }
+    .post-head .co .pill { margin-left: 8px; }
+    .post-meta { font-size: 12.5px; color: var(--muted); }
+    .post-q { list-style: none; }
+    .post-q li { font-size: 13.5px; line-height: 1.7; padding: 6px 0 6px 20px; position: relative; border-bottom: 1px dashed var(--border); }
+    .post-q li:last-child { border-bottom: none; }
+    .post-q li::before { content: "Q"; position: absolute; left: 0; color: var(--purple); font-weight: 700; font-size: 12px; top: 8px; }
+    .pager { display: flex; justify-content: center; gap: 12px; margin-top: 18px; align-items: center; }
+    .empty { text-align: center; color: var(--muted); padding: 50px 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="container" style="max-width: 760px;">
+    <div class="filter-bar">
+      <input id="roleFilter" placeholder="按岗位筛选，例如：后端 / 前端 / 算法">
+      <button class="btn primary sm" id="filterBtn">筛选</button>
+    </div>
+    <div id="posts"></div>
+    <div class="empty hidden" id="empty">还没有相关面经，来当第一个分享的人吧 → <a href="submit.html">提交面经</a></div>
+    <div class="pager">
+      <button class="btn secondary sm" id="prevBtn">上一页</button>
+      <span class="muted" id="pageInfo">第 1 页</span>
+      <button class="btn secondary sm" id="nextBtn">下一页</button>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    IR.renderTopbar("community.html");
+    let page = 1, role = "";
+
+    async function load() {
+      try {
+        const d = await IR.api("community/posts?page=" + page + (role ? "&role=" + encodeURIComponent(role) : ""));
+        const box = document.getElementById("posts");
+        box.innerHTML = "";
+        document.getElementById("empty").classList.toggle("hidden", d.posts.length > 0);
+        document.getElementById("pageInfo").textContent = "第 " + page + " 页 · 共 " + d.total + " 条";
+        document.getElementById("prevBtn").disabled = page <= 1;
+        document.getElementById("nextBtn").disabled = page * 10 >= d.total;
+        d.posts.forEach(p => {
+          const card = document.createElement("div");
+          card.className = "post-card";
+          const authorHtml = p.curated
+            ? '<span class="pill" style="background:var(--purple,#5b4fe0);color:#fff;">官方策展</span>'
+            : IR.escapeHtml(p.author || "匿名");
+          const srcLink = (p.curated && p.source_url)
+            ? ' · <a href="' + IR.escapeHtml(p.source_url) + '" target="_blank" rel="noopener">查看原帖 ↗</a>'
+            : "";
+          card.innerHTML =
+            '<div class="post-head"><div class="co">' + IR.escapeHtml(p.company || "某公司") +
+            '<span class="pill">' + IR.escapeHtml(p.role || "") + "</span></div>" +
+            '<div class="post-meta">' + authorHtml + "</div></div>" +
+            '<div class="post-meta" style="margin-bottom:8px;">' +
+            (p.interview_date ? IR.fmtDate(p.interview_date) + " · " : "") + IR.escapeHtml(p.rounds || "") + srcLink + "</div>" +
+            '<ul class="post-q">' + (p.questions || []).map(q => "<li>" + IR.escapeHtml(q) + "</li>").join("") + "</ul>";
+          box.appendChild(card);
+        });
+      } catch (e) {
+        IR.toast(e.message, true);
+      }
+    }
+    document.getElementById("filterBtn").addEventListener("click", () => {
+      role = document.getElementById("roleFilter").value.trim();
+      page = 1;
+      load();
+    });
+    document.getElementById("roleFilter").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("filterBtn").click();
+    });
+    document.getElementById("prevBtn").addEventListener("click", () => { if (page > 1) { page--; load(); } });
+    document.getElementById("nextBtn").addEventListener("click", () => { page++; load(); });
+    load();
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>开始模拟面试 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .setup-wrap { max-width: 560px; margin: 30px auto; }
+    .free-note { background: linear-gradient(90deg, var(--purple-light), #fff); border-radius: 12px; padding: 13px 16px; margin-bottom: 18px; font-size: 13px; color: var(--purple-dark); line-height: 1.65; }
+    .source-hint { margin-top: 8px; padding: 10px 12px; border-radius: 9px; font-size: 12.5px; line-height: 1.55; }
+    .source-hint.rag { background: #edf9f1; color: #336b50; }
+    .source-hint.fallback { background: #fff8e7; color: #755d1f; }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="setup-wrap">
+    <div class="card">
+      <h3 style="font-size:17px; margin-bottom:4px;">开始一次针对性模拟面试</h3>
+      <p class="muted" style="margin-bottom:18px;">上传简历或粘贴简历要点，AI 面试官会围绕你的经历提问与追问。</p>
+
+      <div class="free-note">∞ <b>完整模拟面试免费不限次。</b>上传简历后，系统会优先围绕你的项目、技能和目标岗位设计问题，并生成完整复盘。</div>
+
+      <div class="field">
+        <label for="resumeFile">上传简历（可选）</label>
+        <input id="resumeFile" type="file" accept=".txt,.md,.pdf">
+      </div>
+      <div class="field">
+        <label for="resumeText">简历要点</label>
+        <textarea id="resumeText" placeholder="例如：做过企业知识库 RAG 问答系统，使用 FastAPI、pgvector、embedding 检索、rerank 和回答评估。"></textarea>
+      </div>
+      <div class="field">
+        <label for="roleInput">目标岗位</label>
+        <input id="roleInput" list="roleList" value="AI 产品经理">
+        <datalist id="roleList"></datalist>
+        <p class="source-hint hidden" id="roleHint" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <label for="modeInput">面试强度</label>
+        <select id="modeInput">
+          <option value="normal">标准追问</option>
+          <option value="hard">高压追问</option>
+          <option value="light">轻量练习</option>
+        </select>
+      </div>
+      <button class="btn primary block" id="startBtn">创建面试</button>
+      <p class="muted" style="text-align:center; margin-top:10px;">简历内容仅用于本场问题设计与报告生成，不会保存完整简历原文。</p>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    const IR_OK = IR.requireAuth();
+    IR.renderTopbar("");
+
+    (async () => {
+      if (!IR_OK) return;
+      try {
+        const r = await IR.api("roles");
+        const roles = r.roles || [];
+        const names = roles.map(x => x.role);
+        const roleList = document.getElementById("roleList");
+        roleList.replaceChildren();
+        [...names, "后端开发岗", "前端开发岗", "算法工程师"].forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          roleList.appendChild(option);
+        });
+        updateRoleHint(roles);
+      } catch (e) {}
+    })();
+
+    let coveredRoles = [];
+    function updateRoleHint(roles) {
+      if (roles) coveredRoles = roles;
+      const input = document.getElementById("roleInput");
+      const hint = document.getElementById("roleHint");
+      const role = input.value.trim();
+      const normalize = value => String(value || "").toLowerCase().replace(/岗位|职位|实习|校招|社招|工程师|方向|\s/g, "");
+      const wanted = normalize(role);
+      const matched = coveredRoles.find(item => {
+        const candidate = normalize(item.role);
+        return wanted && (candidate.includes(wanted) || wanted.includes(candidate));
+      });
+      if (matched) {
+        hint.textContent = "✓ 该岗位已覆盖 " + matched.question_count + " 道可追溯真实面经题；本场会结合简历进行检索与组卷。";
+        hint.className = "source-hint rag";
+      } else if (coveredRoles.length) {
+        hint.textContent = "提示：当前真实面经题库覆盖 " + coveredRoles.map(item => item.role).join("、") + "。这个岗位会使用简历驱动的通用练习题，并在面试页明确标识。";
+        hint.className = "source-hint fallback";
+      } else {
+        hint.className = "source-hint hidden";
+      }
+    }
+    document.getElementById("roleInput").addEventListener("input", () => updateRoleHint());
+
+    document.getElementById("resumeFile").addEventListener("change", async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.type.startsWith("text/") || file.name.endsWith(".md") || file.name.endsWith(".txt")) {
+        document.getElementById("resumeText").value = await file.text();
+        IR.toast("已读取简历文本，可在下方编辑");
+        return;
+      }
+      // PDF 等二进制：上传后端解析文本回填
+      const fd = new FormData();
+      fd.append("file", file);
+      IR.toast("正在解析简历文件…");
+      try {
+        const resp = await fetch("../api/parse_resume", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + (IR.getToken() || "") },
+          body: fd,
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "解析失败");
+        document.getElementById("resumeText").value = data.text;
+        IR.toast("解析成功（" + data.chars + " 字），可在下方编辑");
+      } catch (err) {
+        IR.toast(err.message, true);
+      }
+    });
+
+    document.getElementById("startBtn").addEventListener("click", async () => {
+      const resume = document.getElementById("resumeText").value.trim();
+      if (!resume) { IR.toast("请先粘贴简历要点", true); return; }
+      const btn = document.getElementById("startBtn");
+      btn.disabled = true; btn.textContent = "正在为你定制面试…";
+      try {
+        const d = await IR.api("sessions", "POST", {
+          resume_text: resume,
+          role: document.getElementById("roleInput").value.trim() || "技术岗",
+          mode: document.getElementById("modeInput").value,
+          kind: "full",
+        });
+        location.href = "interview.html?sid=" + d.session_id;
+      } catch (err) {
+        IR.toast(err.message, true);
+        btn.disabled = false; btn.textContent = "创建面试";
+      }
+    });
+  </script>
+</body>
+</html>

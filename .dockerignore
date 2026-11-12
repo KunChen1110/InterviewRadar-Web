@@ -1,0 +1,12 @@
+.git
+.worktrees
+.venv
+__pycache__
+.pytest_cache
+.env
+.env.*
+!.env.example
+!.env.production.example
+certs
+tests
+InterviewRadar-source

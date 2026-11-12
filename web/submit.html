@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>提交真实面经 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .submit-wrap { max-width: 640px; margin: 26px auto; }
+    .reward-tip { background: linear-gradient(90deg, var(--purple-light), #fff); border-radius: 12px; padding: 14px 18px; font-size: 13.5px; color: var(--purple-dark); margin-bottom: 18px; line-height: 1.7; }
+    .q-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .q-row input { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; background: #fbfbfd; }
+    .q-row .del { width: 38px; border-radius: 10px; background: #eceef6; color: var(--muted); font-size: 16px; }
+    .q-row .del:hover { color: var(--red); }
+    .add-q { color: var(--purple); font-size: 13px; font-weight: 600; margin-bottom: 14px; display: inline-block; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    .result-box { border-radius: 12px; padding: 18px; font-size: 14px; line-height: 1.8; margin-top: 16px; }
+    .result-box.ok { background: #e3f7ec; color: #1d7a49; }
+    .result-box.pending { background: #fff4e0; color: #9a6a00; }
+    .consent { background: #f7f7fb; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-size: 13px; line-height: 1.7; }
+    .consent input { vertical-align: top; margin: 4px 7px 0 0; }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="submit-wrap">
+    <div class="reward-tip">
+      🪙 <b>共建真实题库</b>：分享你真实面试中被问到的题目。运营审核通过后将获得
+      <b>10 点贡献值</b>，题目会匿名展示在社区并反哺后续面试。完整模拟面试本身始终免费不限次。
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:16px;">提交真实面经</h3>
+      <div class="form-grid">
+        <div class="field">
+          <label for="company">公司</label>
+          <input id="company" placeholder="例如：字节跳动">
+        </div>
+        <div class="field">
+          <label for="role">岗位</label>
+          <input id="role" placeholder="例如：后端开发">
+        </div>
+        <div class="field">
+          <label for="date">面试日期</label>
+          <input id="date" type="date">
+        </div>
+        <div class="field">
+          <label for="rounds">轮次</label>
+          <input id="rounds" placeholder="例如：一面 / 二面 / HR 面">
+        </div>
+      </div>
+      <div class="field">
+        <label>被问到的题目（至少 3 道）</label>
+        <div id="questionRows"></div>
+        <a class="add-q" href="#" id="addQ">＋ 再添加一道题</a>
+      </div>
+      <label class="consent" for="contentRightsConfirmed">
+        <input id="contentRightsConfirmed" type="checkbox">
+        我确认这些题目来自我的真实经历或我有权提交；我同意平台在人工审核后删除个人信息、整理为<b>匿名化题型</b>，用于公开题库与面试练习。请勿填写姓名、联系方式、内推码、账号或未公开业务信息。
+      </label>
+      <button class="btn primary block" id="submitBtn">提交面经</button>
+      <div id="resultBox"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>我的提交记录</h3>
+      <div class="row-list" id="mySubs"></div>
+      <div class="muted hidden" id="mySubsEmpty" style="padding:10px 0;">还没有提交过面经</div>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    const IR_OK = IR.requireAuth();
+    IR.renderTopbar("submit.html");
+
+    const rows = document.getElementById("questionRows");
+    function addRow(value) {
+      const div = document.createElement("div");
+      div.className = "q-row";
+      div.innerHTML = '<input placeholder="例如：讲讲 Redis 持久化机制的区别？" value="' + (value || "") + '">' +
+        '<button class="del" title="删除">×</button>';
+      div.querySelector(".del").addEventListener("click", () => div.remove());
+      rows.appendChild(div);
+    }
+    addRow(); addRow(); addRow();
+    document.getElementById("addQ").addEventListener("click", e => { e.preventDefault(); addRow(); });
+
+    async function loadMine() {
+      try {
+        const d = await IR.api("submissions/mine");
+        const list = document.getElementById("mySubs");
+        list.innerHTML = "";
+        if (!d.submissions.length) {
+          document.getElementById("mySubsEmpty").classList.remove("hidden");
+          return;
+        }
+        d.submissions.forEach(s => {
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = "<div><b>" + IR.escapeHtml(s.company) + " · " + IR.escapeHtml(s.role) + "</b>" +
+            '<div class="muted">' + IR.fmtDate(s.created_at) + (s.quality_note ? " · " + IR.escapeHtml(s.quality_note) : "") + "</div></div>" +
+            '<span class="tag ' + (s.status === "approved" ? "ok" : "pending") + '">' +
+            (s.status === "approved" ? "已通过 · +10 贡献值" : (s.status === "rejected" ? "未通过" : "复核中")) + "</span>";
+          list.appendChild(row);
+        });
+      } catch (e) {}
+    }
+    if (IR_OK) loadMine();
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const questions = [...rows.querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean);
+      const body = {
+        company: document.getElementById("company").value.trim(),
+        role: document.getElementById("role").value.trim(),
+        interview_date: document.getElementById("date").value,
+        rounds: document.getElementById("rounds").value.trim(),
+        questions,
+        content_rights_confirmed: document.getElementById("contentRightsConfirmed").checked,
+      };
+      if (!body.content_rights_confirmed) { IR.toast("请先确认你有权提交内容并同意匿名化题型复用", true); return; }
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true; btn.textContent = "提交中…";
+      try {
+        const d = await IR.api("submissions", "POST", body);
+        const box = document.getElementById("resultBox");
+        box.innerHTML = '<div class="result-box ' + (d.status === "approved" ? "ok" : "pending") + '">' +
+          (d.status === "approved"
+            ? "🎉 " + IR.escapeHtml(d.note || "审核通过") + "<br>当前贡献值：<b>" + d.contribution + "</b>"
+            : "⏳ " + IR.escapeHtml(d.note || "已进入复核队列")) + "</div>";
+        loadMine();
+        IR.renderTopbar("submit.html");
+      } catch (err) {
+        IR.toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = "提交面经";
+      }
+    });
+  </script>
+</body>
+</html>

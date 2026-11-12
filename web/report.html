@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>面试复盘报告 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .report-wrap { max-width: 760px; margin: 26px auto; }
+    .report-head { display: flex; gap: 26px; align-items: center; margin-bottom: 18px; }
+    .score-big { font-size: 54px; font-weight: 700; color: var(--purple); }
+    .score-big span { font-size: 15px; color: var(--muted); font-weight: 400; }
+    .radar-box { display: flex; justify-content: center; padding: 10px 0 4px; }
+    .dim-row { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; padding: 6px 0; }
+    .stars { letter-spacing: 2px; }
+    .stars .on { color: var(--orange); }
+    .stars .off { color: #dcdce6; }
+    .stage-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 4px; border-bottom: 1px dashed var(--border); font-size: 14px; }
+    .stage-item:last-child { border-bottom: none; }
+    .stage-item .comment { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+    .report-list { list-style: none; }
+    .report-list li { font-size: 13.5px; line-height: 1.75; padding: 8px 0 8px 20px; position: relative; border-bottom: 1px dashed var(--border); }
+    .report-list li::before { content: "•"; position: absolute; left: 4px; color: var(--purple); font-weight: 700; }
+    .coverage-note { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #fff7e8; color: #8a5a00; font-size: 13px; line-height: 1.55; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } .report-head { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="report-wrap">
+    <div class="card">
+      <div class="report-head">
+        <div>
+          <div class="score-big"><span id="overall">—</span><span> / 100</span></div>
+          <div class="muted" id="reportSub">综合评分</div>
+          <div class="coverage-note" id="coverageNote" hidden></div>
+        </div>
+        <div class="radar-box"><canvas id="radarCanvas" width="220" height="220"></canvas></div>
+        <div style="flex:1; min-width:180px;">
+          <div class="dim-row"><span>表达清晰度</span><span class="stars" id="starsClarity"></span></div>
+          <div class="dim-row"><span>技术深度</span><span class="stars" id="starsDepth"></span></div>
+          <div class="dim-row"><span>逻辑思维</span><span class="stars" id="starsLogic"></span></div>
+          <div class="dim-row"><span>项目可信度</span><span class="stars" id="starsProof"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>分环节表现</h3>
+      <div id="stageList"></div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>暴露的风险点</h3>
+        <ul class="report-list" id="riskList"></ul>
+      </div>
+      <div class="card">
+        <h3>改进建议</h3>
+        <ul class="report-list" id="suggestList"></ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>一周练习路线</h3>
+      <ul class="report-list" id="planList"></ul>
+    </div>
+
+    <div style="display:flex; gap:12px; justify-content:center; margin:22px 0;" id="actionRow">
+      <button class="btn secondary" id="exportBtn">下载报告</button>
+      <a class="btn primary" href="setup.html">再来一场</a>
+      <a class="btn secondary" href="dashboard.html">回控制台</a>
+    </div>
+    <div class="card" style="margin:0 0 26px;">
+      <h3>这场面试对你有帮助吗？</h3>
+      <p class="muted" style="margin:6px 0 12px;">你的反馈只用于改进题目与面试体验，不会影响本场报告。</p>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;" id="feedbackStars"></div>
+      <textarea id="feedbackComment" rows="3" maxlength="1000" placeholder="可选：哪些问题最贴近你的岗位？哪些地方需要改进？" style="width:100%;margin-top:12px;box-sizing:border-box;"></textarea>
+      <button class="btn sm primary" id="feedbackBtn" style="margin-top:10px;">提交反馈</button>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    const IR_OK = IR.requireAuth();
+    IR.renderTopbar("");
+    const sid = new URLSearchParams(location.search).get("sid");
+
+    function starStr(v) {
+      const n = Math.max(0, Math.min(5, Math.round(v / 20)));
+      let out = "";
+      for (let i = 0; i < 5; i++) out += '<span class="' + (i < n ? "on" : "off") + '">★</span>';
+      return out;
+    }
+
+    function drawRadar(dims) {
+      const canvas = document.getElementById("radarCanvas");
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = 220 * devicePixelRatio;
+      const h = canvas.height = 220 * devicePixelRatio;
+      canvas.style.width = "220px"; canvas.style.height = "220px";
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      const cx = 110, cy = 110, R = 78;
+      const keys = ["clarity", "depth", "logic", "proof"];
+      const labels = ["表达", "深度", "逻辑", "可信度"];
+      ctx.clearRect(0, 0, 220, 220);
+      for (let ring = 1; ring <= 4; ring++) {
+        ctx.beginPath();
+        keys.forEach((_, i) => {
+          const a = -Math.PI / 2 + i * Math.PI / 2;
+          const r = R * ring / 4;
+          i ? ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)) : ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+        });
+        ctx.closePath();
+        ctx.strokeStyle = "#e8e9f2"; ctx.stroke();
+      }
+      keys.forEach((_, i) => {
+        const a = -Math.PI / 2 + i * Math.PI / 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a));
+        ctx.strokeStyle = "#e8e9f2"; ctx.stroke();
+        ctx.fillStyle = "#8a8ca3"; ctx.font = "12px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText(labels[i], cx + (R + 16) * Math.cos(a), cy + (R + 16) * Math.sin(a) + 4);
+      });
+      ctx.beginPath();
+      keys.forEach((k, i) => {
+        const a = -Math.PI / 2 + i * Math.PI / 2;
+        const r = R * Math.max(0, Math.min(100, dims[k] || 0)) / 100;
+        i ? ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)) : ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      });
+      ctx.closePath();
+      ctx.fillStyle = "rgba(108,92,231,.25)"; ctx.fill();
+      ctx.strokeStyle = "#6c5ce7"; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    function fillList(id, items) {
+      const ul = document.getElementById(id);
+      ul.innerHTML = "";
+      (items || []).forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t;
+        ul.appendChild(li);
+      });
+    }
+
+    (async () => {
+      if (!IR_OK) return;
+      if (!sid) { IR.toast("缺少面试 ID", true); return; }
+      try {
+        const d = await IR.api("sessions/" + sid + "/report");
+        const r = d.report;
+        document.getElementById("overall").textContent = r.overall != null ? r.overall : "—";
+        const isEarlyExit = Boolean(d.coverage && d.coverage.is_early_exit);
+        document.getElementById("reportSub").textContent =
+          (isEarlyExit ? "局部复盘报告" : "完整复盘报告") +
+          (r.generated_by === "llm" ? " · AI 个性化生成" : " · 基于结构化评估生成");
+        const coverageNote = document.getElementById("coverageNote");
+        if (isEarlyExit) {
+          coverageNote.textContent = d.coverage.notice;
+          coverageNote.hidden = false;
+        }
+        const dims = r.dimensions || {};
+        drawRadar(r.radar || dims);
+        document.getElementById("starsClarity").innerHTML = starStr(dims.clarity || 0);
+        document.getElementById("starsDepth").innerHTML = starStr(dims.depth || 0);
+        document.getElementById("starsLogic").innerHTML = starStr(dims.logic || 0);
+        document.getElementById("starsProof").innerHTML = starStr(dims.proof || 0);
+        const stages = document.getElementById("stageList");
+        (r.stage_summary || []).forEach(s => {
+          const div = document.createElement("div");
+          div.className = "stage-item";
+          div.innerHTML = "<div><b>" + IR.escapeHtml(s.step) + "</b><div class='comment'>"
+            + IR.escapeHtml(s.comment) + "</div></div><span class='muted'>" + s.questions + " 题</div>";
+          stages.appendChild(div);
+        });
+        fillList("riskList", r.risk_points);
+        fillList("suggestList", r.suggestions);
+        fillList("planList", r.next_plan);
+      } catch (err) {
+        IR.toast(err.message, true);
+      }
+    })();
+
+    document.getElementById("exportBtn").onclick = async () => {
+      if (!sid) return;
+      try {
+        const response = await fetch("../api/sessions/" + encodeURIComponent(sid) + "/report/export", {
+          headers: {Authorization: "Bearer " + IR.getToken()}
+        });
+        if (!response.ok) throw new Error("报告导出失败");
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url; link.download = "InterviewRadar-面试复盘.txt"; link.click();
+        URL.revokeObjectURL(url);
+      } catch (err) { IR.toast(err.message, true); }
+    };
+
+    let selectedRating = 0;
+    const feedbackStars = document.getElementById("feedbackStars");
+    for (let rating = 1; rating <= 5; rating++) {
+      const button = document.createElement("button");
+      button.className = "btn sm secondary";
+      button.textContent = "★ " + rating;
+      button.onclick = () => {
+        selectedRating = rating;
+        feedbackStars.querySelectorAll("button").forEach((item, index) => {
+          item.className = "btn sm " + (index < rating ? "primary" : "secondary");
+        });
+      };
+      feedbackStars.appendChild(button);
+    }
+    document.getElementById("feedbackBtn").onclick = async () => {
+      if (!sid || !selectedRating) { IR.toast("请先选择 1–5 星评分", true); return; }
+      try {
+        await IR.api("sessions/" + sid + "/feedback", "POST", {
+          rating: selectedRating,
+          comment: document.getElementById("feedbackComment").value,
+        });
+        IR.toast("感谢反馈，已保存");
+      } catch (err) { IR.toast(err.message, true); }
+    };
+  </script>
+</body>
+</html>

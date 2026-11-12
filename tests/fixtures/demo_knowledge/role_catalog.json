@@ -1,0 +1,6 @@
+{
+  "roles": [
+    {"role": "AI 产品经理", "slug": "ai-product-manager", "question_count": 7, "topics": ["产品思考", "项目复盘", "需求分析", "用户研究", "效果评估", "风险处理", "资源取舍"]},
+    {"role": "运营策划", "slug": "operations-planning", "question_count": 7, "topics": ["岗位动机", "项目复盘", "数据分析", "活动策划", "实验设计", "转化诊断", "跨团队协作"]}
+  ]
+}

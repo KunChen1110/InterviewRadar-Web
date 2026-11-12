@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 / 注册 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .auth-wrap { max-width: 400px; margin: 60px auto; }
+    .auth-card { background: #fff; border-radius: 18px; padding: 32px; box-shadow: 0 4px 20px rgba(30,30,60,.08); }
+    .tabs { display: flex; background: #eceef6; border-radius: 10px; padding: 4px; margin-bottom: 22px; }
+    .tabs button { flex: 1; padding: 9px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--muted); }
+    .tabs button.active { background: #fff; color: var(--purple); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .free-tip { background: var(--purple-light); color: var(--purple); font-size: 13px; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; line-height: 1.6; }
+    .auth-foot { text-align: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="tabs">
+        <button id="tabLogin">登录</button>
+        <button id="tabRegister">注册</button>
+      </div>
+      <div class="free-tip" id="freeTip">🎁 注册即可 <b>免费不限次完成完整模拟面试</b>，无需绑定支付方式。</div>
+      <div class="field" id="nickField">
+        <label for="nickname">昵称</label>
+        <input id="nickname" placeholder="怎么称呼你？">
+      </div>
+      <div class="field">
+        <label for="email">邮箱</label>
+        <input id="email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="password">密码</label>
+        <input id="password" type="password" minlength="8" placeholder="至少 8 位">
+      </div>
+      <button class="btn primary block" id="submitBtn">登录</button>
+      <p class="auth-foot" id="switchLine">还没有账号？<a href="#" id="switchLink">免费注册</a></p>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    IR.renderTopbar("");
+    let mode = "login";
+    const params = new URLSearchParams(location.search);
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById("tabLogin").classList.toggle("active", m === "login");
+      document.getElementById("tabRegister").classList.toggle("active", m === "register");
+      document.getElementById("nickField").style.display = m === "register" ? "block" : "none";
+      document.getElementById("freeTip").style.display = m === "register" ? "block" : "none";
+      document.getElementById("submitBtn").textContent = m === "register" ? "注册并开始完整模拟面试" : "登录";
+      document.getElementById("switchLine").innerHTML = m === "register"
+        ? '已有账号？<a href="#" id="switchLink">去登录</a>'
+        : '还没有账号？<a href="#" id="switchLink">免费注册</a>';
+      document.getElementById("switchLink").addEventListener("click", e => {
+        e.preventDefault();
+        setMode(m === "register" ? "login" : "register");
+      });
+    }
+    document.getElementById("tabLogin").addEventListener("click", () => setMode("login"));
+    document.getElementById("tabRegister").addEventListener("click", () => setMode("register"));
+    setMode(params.get("mode") === "register" ? "register" : "login");
+
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const nickname = document.getElementById("nickname").value.trim();
+      if (!email || !password) { IR.toast("请填写邮箱和密码", true); return; }
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      try {
+        const d = await IR.api("auth/" + mode, "POST", { email, password, nickname });
+        IR.setToken(d.token);
+        IR.toast(mode === "register" ? "注册成功，完整模拟面试免费不限次！" : "欢迎回来");
+        const next = params.get("next") || "dashboard.html";
+        setTimeout(() => location.href = next, 600);
+      } catch (err) {
+        IR.toast(err.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    document.getElementById("password").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("submitBtn").click();
+    });
+  </script>
+</body>
+</html>

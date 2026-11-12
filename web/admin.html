@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>投稿审核 - InterviewRadar</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .admin-wrap { max-width: 900px; margin: 26px auto; }
+    .submission { border-bottom: 1px solid var(--border); padding: 16px 0; }
+    .submission:last-child { border-bottom: 0; }
+    .submission h4 { margin-bottom: 6px; }
+    .submission p { font-size: 13px; color: var(--muted); line-height: 1.65; }
+    .questions { margin: 10px 0; padding-left: 20px; font-size: 13px; line-height: 1.7; }
+    .actions { display:flex; gap: 8px; align-items:center; margin-top: 10px; }
+    .actions input { flex:1; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+    .drafts { margin-top: 12px; display: grid; gap: 8px; }
+    .drafts textarea { width: 100%; min-height: 52px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+  <main class="admin-wrap">
+    <div class="card">
+      <h3>运营概览</h3>
+      <p class="muted" style="margin:6px 0 12px;">只展示汇总指标，不展示任何候选人的简历或回答原文。</p>
+      <div class="stat-grid" id="metrics"><div class="muted">正在加载指标…</div></div>
+    </div>
+    <div class="card">
+      <h3>投稿审核</h3>
+      <p class="muted" style="margin:6px 0 12px;">仅配置在 <code>APP_ADMIN_EMAILS</code> 中的账号可访问。原始投稿不会公开；通过前请核对脱敏证据并编辑下方匿名化题型草案。</p>
+      <div id="list" class="muted">正在加载待审核投稿…</div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>人工导入真实题库</h3>
+      <p class="muted" style="margin:6px 0 12px;">只接受你整理后的 UTF-8 CSV/JSON，不会自动抓取网页。先预览校验和去重，确认后才写入题库。</p>
+      <div class="actions"><input id="importFile" type="file" accept=".csv,.json"><button class="btn sm primary" id="previewBtn">预览导入</button></div>
+      <div id="importResult" class="muted" style="margin-top:12px;"></div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>题库治理</h3>
+      <p class="muted" style="margin:6px 0 12px;">可停用过期、重复或审核不通过的人工导入题；停用后该题不会再参与组卷，历史数据不受影响。</p>
+      <div class="actions"><input id="questionQuery" placeholder="按题干、来源或岗位标签搜索"><button class="btn sm secondary" id="searchQuestions">搜索</button><button class="btn sm secondary" id="exportQuestions">导出 CSV</button></div>
+      <div id="questionList" class="muted" style="margin-top:12px;">输入关键词后搜索人工导入题目。</div>
+    </div>
+  </main>
+  <script src="common.js"></script>
+  <script>
+    const IR_OK = IR.requireAuth();
+    IR.renderTopbar("");
+    const list = document.getElementById("list");
+    function show(items) {
+      list.innerHTML = "";
+      if (!items.length) { list.textContent = "当前没有待审核投稿。"; return; }
+      items.forEach(item => {
+        const el = document.createElement("article");
+        el.className = "submission";
+        const redactedQuestions = Array.isArray(item.redacted_questions) ? item.redacted_questions : [];
+        const drafts = Array.isArray(item.drafts) ? item.drafts : [];
+        el.innerHTML = "<h4>" + IR.escapeHtml(item.company) + " · " + IR.escapeHtml(item.role) + "</h4>" +
+          "<p>投稿人：" + IR.escapeHtml(item.submitter || "") + " · " + IR.escapeHtml(item.interview_date || "未填日期") + " · " + IR.escapeHtml(item.rounds || "未填轮次") + (item.rights_confirmed ? " · 已确认授权" : " · <b>未确认授权</b>") + "</p>" +
+          "<p><b>脱敏审核证据（不公开）</b></p><ol class='questions'>" + redactedQuestions.map(q => "<li>" + IR.escapeHtml(q) + "</li>").join("") + "</ol>" +
+          "<p><b>拟发布的匿名化题型（可编辑）</b></p><div class='drafts'></div>" +
+          "<div class='actions'><input placeholder='审核备注（驳回时必填）'><button class='btn sm primary'>通过</button><button class='btn sm secondary'>驳回</button></div>";
+        const draftHost = el.querySelector(".drafts");
+        const draftInputs = drafts.map(draft => {
+          const input = document.createElement("textarea");
+          input.value = draft.question || "";
+          input.dataset.roleTags = JSON.stringify(draft.role_tags || []);
+          input.dataset.stage = draft.stage || "能力匹配";
+          input.dataset.topic = draft.topic || "社区共建题型";
+          draftHost.appendChild(input);
+          return input;
+        });
+        const note = el.querySelector("input");
+        const [approve, reject] = el.querySelectorAll("button");
+        async function moderate(action) {
+          approve.disabled = reject.disabled = true;
+          const drafts = draftInputs.map(input => ({question: input.value.trim(), role_tags: JSON.parse(input.dataset.roleTags), stage: input.dataset.stage, topic: input.dataset.topic})).filter(draft => draft.question);
+          if (action === "approve" && !drafts.length) { IR.toast("至少保留一道可发布的匿名化题型", true); approve.disabled = reject.disabled = false; return; }
+          try { await IR.api("admin/submissions/" + item.id + "/" + action, "POST", {note: note.value, drafts}); await load(); }
+          catch (e) { IR.toast(e.message, true); approve.disabled = reject.disabled = false; }
+        }
+        approve.onclick = () => moderate("approve");
+        reject.onclick = () => moderate("reject");
+        list.appendChild(el);
+      });
+    }
+    async function load() {
+      try { show((await IR.api("admin/submissions?status=pending")).submissions || []); }
+      catch (e) { list.textContent = e.message || "没有审核权限"; }
+    }
+    if (IR_OK) load();
+
+    async function loadMetrics() {
+      const host = document.getElementById("metrics");
+      try {
+        const m = await IR.api("admin/metrics");
+        const cards = [
+          [m.users_total, "注册用户"],
+          [m.sessions_total, "总面试场次"],
+          [m.sessions_finished, "已完成面试"],
+          [m.imported_questions, "人工导入题目"],
+          [m.feedback_average == null ? "—" : m.feedback_average + " / 5", "平均满意度"],
+          [m.pending_submissions, "待审核投稿"],
+        ];
+        host.innerHTML = cards.map(item => '<div class="stat-card"><div class="stat-num">' + IR.escapeHtml(item[0]) + '</div><div class="stat-label">' + item[1] + '</div></div>').join("");
+      } catch (e) { host.textContent = e.message || "没有运营权限"; }
+    }
+    if (IR_OK) loadMetrics();
+
+    async function loadQuestions() {
+      const host = document.getElementById("questionList");
+      const query = document.getElementById("questionQuery").value.trim();
+      host.textContent = "正在加载…";
+      try {
+        const data = await IR.api("admin/questions?query=" + encodeURIComponent(query));
+        const questions = data.questions || [];
+        if (!questions.length) { host.textContent = query ? "没有找到匹配的人工导入题目。" : "暂无人工导入题目。"; return; }
+        host.innerHTML = "";
+        questions.forEach(question => {
+          const item = document.createElement("article"); item.className = "submission";
+          const metadata = typeof question.metadata === "string" ? {} : (question.metadata || {});
+          item.innerHTML = "<h4>" + IR.escapeHtml(question.question) + "</h4>" +
+            "<p>" + IR.escapeHtml((question.tags || []).join(" · ")) + " · " + IR.escapeHtml(question.source_name || "") +
+            " · " + IR.escapeHtml(metadata.stage || "未标注环节") + " / " + IR.escapeHtml(metadata.topic || "未标注主题") + "</p>" +
+            '<div class="actions"><span class="tag ' + (question.is_active ? "ok" : "pending") + '">' + (question.is_active ? "启用中" : "已停用") +
+            '</span><button class="btn sm secondary">' + (question.is_active ? "停用题目" : "恢复题目") + "</button></div>";
+          const button = item.querySelector("button");
+          button.onclick = async () => {
+            button.disabled = true;
+            try {
+              await IR.api("admin/questions/" + question.id, "PATCH", {active: !question.is_active});
+              await loadQuestions();
+            } catch (e) { IR.toast(e.message, true); button.disabled = false; }
+          };
+          host.appendChild(item);
+        });
+      } catch (e) { host.textContent = e.message || "没有运营权限"; }
+    }
+    document.getElementById("searchQuestions").onclick = loadQuestions;
+    document.getElementById("exportQuestions").onclick = async () => {
+      try {
+        const response = await fetch("../api/admin/questions/export", {headers: {Authorization: "Bearer " + IR.getToken()}});
+        if (!response.ok) throw new Error("导出失败");
+        const blob = await response.blob(); const url = URL.createObjectURL(blob);
+        const link = document.createElement("a"); link.href = url; link.download = "InterviewRadar-人工题库.csv"; link.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { IR.toast(e.message, true); }
+    };
+    document.getElementById("questionQuery").addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); loadQuestions(); }
+    });
+
+    let importPreview = null;
+    document.getElementById("previewBtn").onclick = async () => {
+      const file = document.getElementById("importFile").files[0];
+      if (!file) { IR.toast("请选择 CSV 或 JSON 文件", true); return; }
+      const body = new FormData(); body.append("file", file);
+      const box = document.getElementById("importResult"); box.textContent = "正在校验…";
+      try {
+        const response = await fetch("../api/admin/question-imports/preview", {method:"POST", headers:{Authorization:"Bearer " + IR.getToken()}, body});
+        const data = await response.json(); if (!response.ok) throw new Error(data.detail || "预览失败");
+        importPreview = data.preview_id;
+        box.innerHTML = "有效 <b>" + data.valid_count + "</b> 条 · 重复 " + data.duplicate_count + " 条 · 错误 " + data.errors.length + " 条" +
+          (data.errors.length ? "<br>" + data.errors.map(IR.escapeHtml).join("<br>") : "") +
+          (data.valid_count ? '<div style="margin-top:10px;"><button class="btn sm primary" id="confirmImport">确认写入题库</button></div>' : "");
+        const confirm = document.getElementById("confirmImport"); if (confirm) confirm.onclick = confirmImport;
+      } catch (e) { box.textContent = e.message; }
+    };
+    async function confirmImport() {
+      try {
+        const data = await IR.api("admin/question-imports/confirm", "POST", {preview_id: importPreview});
+        document.getElementById("importResult").textContent = "已导入 " + data.inserted_count + " 条题目" + (data.skipped_duplicates ? "，跳过 " + data.skipped_duplicates + " 条重复题" : "");
+      } catch (e) { IR.toast(e.message, true); }
+    }
+  </script>
+</body>
+</html>

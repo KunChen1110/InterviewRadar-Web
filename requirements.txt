@@ -1,0 +1,9 @@
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
+openai==2.53.0
+psycopg[binary]==3.3.4
+pgvector==0.5.0
+pypdf==6.15.0
+python-multipart==0.0.32
+python-dotenv==1.2.2
+alibaba-nls-python-sdk==1.0.2

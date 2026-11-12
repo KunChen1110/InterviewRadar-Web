@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InterviewRadar - 基于真实面经的 AI 模拟面试平台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <style>
+/* InterviewRadar 共享样式（非面试间页面） */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --purple: #6c5ce7; --purple-dark: #5a4bd1; --purple-light: #efeafd;
+  --bg: #f4f5fa; --card: #ffffff; --text: #23243a; --muted: #8a8ca3;
+  --border: #e8e9f2; --red: #e5534b; --orange: #f5a623; --green: #2fbf71;
+}
+body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+a { color: var(--purple); text-decoration: none; }
+button { font: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font: inherit; }
+
+/* 导航 */
+.nav { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
+.nav-inner { max-width: 1120px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 26px; }
+.nav-brand { font-size: 18px; font-weight: 700; color: var(--purple); display: flex; align-items: center; gap: 8px; }
+.nav-links { display: flex; gap: 18px; flex: 1; }
+.nav-links a { font-size: 14px; color: var(--muted); padding: 4px 2px; }
+.nav-links a:hover { color: var(--text); }
+.nav-links a.active { color: var(--purple); font-weight: 600; border-bottom: 2px solid var(--purple); }
+.nav-user { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.nav-user .credit-chip { background: var(--purple-light); color: var(--purple); border-radius: 999px; padding: 4px 12px; font-weight: 600; font-size: 12.5px; }
+.nav-user .nick { font-weight: 600; }
+.nav-user .logout { color: var(--muted); font-size: 12.5px; }
+.nav-user .logout:hover { color: var(--red); }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 26px 20px 60px; }
+.card { background: var(--card); border-radius: 16px; padding: 22px; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+.card h3 { font-size: 15px; margin-bottom: 12px; }
+.muted { color: var(--muted); font-size: 13px; }
+
+.btn { display: inline-block; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-weight: 600; text-align: center; }
+.btn.primary { background: var(--purple); color: #fff; }
+.btn.primary:hover { background: var(--purple-dark); }
+.btn.primary:disabled { opacity: .6; cursor: wait; }
+.btn.secondary { background: #eceef6; color: var(--text); }
+.btn.outline { border: 1.5px solid var(--purple); color: var(--purple); background: #fff; }
+.btn.block { display: block; width: 100%; }
+.btn.sm { padding: 7px 14px; font-size: 13px; }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.field input, .field textarea, .field select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; background: #fbfbfd; }
+.field textarea { min-height: 90px; resize: vertical; }
+.pill { display: inline-block; background: var(--purple-light); color: var(--purple); font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 3px 11px; }
+
+/* toast */
+.toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #23243a; color: #fff; padding: 11px 22px; border-radius: 10px; font-size: 14px; z-index: 99; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.toast.err { background: var(--red); }
+
+/* 统计卡 */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.stat-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+.stat-card .stat-num { font-size: 28px; font-weight: 700; color: var(--purple); font-variant-numeric: tabular-nums; }
+.stat-card .stat-label { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+/* 列表行 */
+.row-list .row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px dashed var(--border); font-size: 14px; }
+.row-list .row:last-child { border-bottom: none; }
+.tag { font-size: 12px; border-radius: 999px; padding: 2px 10px; font-weight: 600; }
+.tag.trial { background: #fff4e0; color: #b87700; }
+.tag.full { background: var(--purple-light); color: var(--purple); }
+.tag.ok { background: #e3f7ec; color: var(--green); }
+.tag.pending { background: #fff4e0; color: #b87700; }
+
+.page-foot { text-align: center; color: var(--muted); font-size: 12.5px; padding: 26px 0 10px; }
+
+</style>
+  <style>
+    .hero { text-align: center; padding: 70px 20px 50px; }
+    .hero h1 { font-size: 40px; line-height: 1.3; margin-bottom: 16px; }
+    .hero h1 .hl { color: var(--purple); }
+    .hero p { font-size: 16px; color: var(--muted); max-width: 640px; margin: 0 auto 30px; line-height: 1.8; }
+    .hero-cta { display: flex; gap: 14px; justify-content: center; }
+    .hero-cta .btn { padding: 13px 34px; font-size: 15px; }
+    .section { max-width: 1000px; margin: 0 auto; padding: 46px 20px; }
+    .section h2 { text-align: center; font-size: 26px; margin-bottom: 10px; }
+    .section .sub { text-align: center; color: var(--muted); font-size: 14.5px; margin-bottom: 34px; }
+    .stages { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .stage-card { background: #fff; border-radius: 14px; padding: 20px 16px; text-align: center; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+    .stage-card .n { width: 34px; height: 34px; border-radius: 50%; background: var(--purple-light); color: var(--purple); display: grid; place-items: center; font-weight: 700; margin: 0 auto 10px; }
+    .stage-card h4 { font-size: 14.5px; margin-bottom: 6px; }
+    .stage-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feat { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+    .feat .ico { font-size: 26px; margin-bottom: 10px; }
+    .feat h4 { font-size: 15.5px; margin-bottom: 8px; }
+    .feat p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .loop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: stretch; }
+    .loop .step { background: #fff; border-radius: 14px; padding: 20px 16px; text-align: center; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+    .loop .step .ico { font-size: 24px; margin-bottom: 8px; }
+    .loop .step h4 { font-size: 14px; margin-bottom: 6px; }
+    .loop .step p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .cta-band { background: linear-gradient(135deg, var(--purple), #8b7cf0); border-radius: 20px; color: #fff; text-align: center; padding: 46px 30px; max-width: 1000px; margin: 30px auto 60px; }
+    .cta-band h2 { font-size: 24px; margin-bottom: 12px; }
+    .cta-band p { opacity: .9; font-size: 14px; margin-bottom: 24px; }
+    .cta-band .btn { background: #fff; color: var(--purple); padding: 12px 36px; }
+    @media (max-width: 860px) {
+      .stages { grid-template-columns: repeat(2, 1fr); }
+      .feat-grid, .loop { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <section class="hero">
+    <h1>上传简历，让 <span class="hl">AI 面试官</span><br>带你打一场有准备的仗</h1>
+    <p>InterviewRadar 基于真实面经知识库，围绕你的简历项目进行针对性提问与连环追问，
+       语音对话、实时评分、复盘报告——不只是刷题，而是预测你会被怎么问。</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="auth.html?mode=register">免费开始完整模拟面试</a>
+      <a class="btn outline" href="community.html">逛逛面经社区</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>五个环节，一场完整面试</h2>
+    <p class="sub">AI 面试官会根据你的回答动态追问，注册即可免费不限次完成完整流程</p>
+    <div class="stages">
+      <div class="stage-card"><div class="n">1</div><h4>自我介绍</h4><p>了解背景和求职动机</p></div>
+      <div class="stage-card"><div class="n">2</div><h4>项目深挖</h4><p>围绕简历项目连环追问</p></div>
+      <div class="stage-card"><div class="n">3</div><h4>能力匹配</h4><p>考察岗位核心能力</p></div>
+      <div class="stage-card"><div class="n">4</div><h4>场景问题</h4><p>解决实际业务问题</p></div>
+      <div class="stage-card"><div class="n">5</div><h4>面试复盘</h4><p>雷达图评分与改进路线</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>为什么不是又一个题库</h2>
+    <p class="sub">我们卖的不是题目，是"你这份简历会被怎么追问"的判断力</p>
+    <div class="feat-grid">
+      <div class="feat"><div class="ico">🎙️</div><h4>语音模拟面试</h4><p>视频通话式界面，开口回答、实时转写，AI 面试官像真人一样抓住你回答里虚的地方继续追问。</p></div>
+      <div class="feat"><div class="ico">📊</div><h4>动态测评体系</h4><p>表达、深度、逻辑、可信度四维实时评分，结束后生成能力雷达图、风险点清单和一周练习路线。</p></div>
+      <div class="feat"><div class="ico">🧭</div><h4>真实面经驱动</h4><p>题库来自真实面经与社区投稿，每道题有出处、有时效，不是 AI 凭空编造。</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>共建真实题库：越分享，越准确</h2>
+    <p class="sub">真实面试结束后，把你的面经匿名分享给社区，帮助下一位求职者准备得更好</p>
+    <div class="loop">
+      <div class="step"><div class="ico">🎯</div><h4>去真实面试</h4><p>带着 InterviewRadar 的准备上战场</p></div>
+      <div class="step"><div class="ico">📝</div><h4>提交真实面经</h4><p>公司、岗位、被问到的题目</p></div>
+      <div class="step"><div class="ico">🪙</div><h4>获得贡献值</h4><p>运营审核通过后获得 10 点贡献值</p></div>
+      <div class="step"><div class="ico">🔄</div><h4>题库持续进化</h4><p>你的面经帮助下一位求职者</p></div>
+    </div>
+  </section>
+
+  <div class="cta-band">
+    <h2>下周就要面试了？今晚先练一场</h2>
+    <p>注册即可免费不限次完整练习，无需绑卡</p>
+    <a class="btn" href="auth.html?mode=register">立即开始</a>
+  </div>
+
+  <p class="page-foot">InterviewRadar · 专攻面试的 AI 平台</p>
+
+  <script>
+/* InterviewRadar 共享 JS：API 封装 / 鉴权 / 导航栏 / toast */
+const IR = (() => {
+  const TOKEN_KEY = "ir_token";
+
+  function getToken() {
+    try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+  }
+  function setToken(t) {
+    try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+  }
+
+  // 页面位于 /web/ 下时 API 走 ../api/；落地页可能被直接服务在根路径 /，此时走 api/
+  const IN_WEB = location.pathname.includes("/web/");
+  const API_BASE = IN_WEB ? "../api/" : "api/";
+  const PAGE_BASE = IN_WEB ? "" : "web/";
+
+  function pageHref(h) { return PAGE_BASE + h; }
+
+  // 根路径上下文下，把页面内的相对 .html 链接统一补 web/ 前缀
+  if (!IN_WEB) {
+    document.querySelectorAll("a[href]").forEach(a => {
+      const h = a.getAttribute("href") || "";
+      if (h && !h.startsWith("http") && !h.startsWith("#") && !h.startsWith("web/") && h.includes(".html")) {
+        a.setAttribute("href", "web/" + h);
+      }
+    });
+  }
+
+  async function api(path, method, body) {
+    const opts = { method: method || "GET", headers: {} };
+    if (body !== undefined) {
+      opts.headers["Content-Type"] = "application/json";
+      opts.body = JSON.stringify(body);
+    }
+    const t = getToken();
+    if (t) opts.headers["Authorization"] = "Bearer " + t;
+    const resp = await fetch(API_BASE + path, opts);
+    let data = {};
+    try { data = await resp.json(); } catch (e) {}
+    if (!resp.ok) {
+      if (resp.status === 401) {
+        setToken("");
+        const here = location.pathname.split("/").pop() + location.search;
+        location.href = pageHref("auth.html?next=") + encodeURIComponent(here);
+        throw new Error("请先登录");
+      }
+      throw new Error(data.detail || ("请求失败 " + resp.status));
+    }
+    return data;
+  }
+
+  function requireAuth() {
+    if (!getToken()) {
+      const here = location.pathname.split("/").pop() + location.search;
+      location.href = pageHref("auth.html?next=") + encodeURIComponent(here);
+      return false;
+    }
+    return true;
+  }
+
+  function toast(msg, isErr) {
+    document.querySelectorAll(".toast").forEach(el => el.remove());
+    const div = document.createElement("div");
+    div.className = "toast" + (isErr ? " err" : "");
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 2600);
+  }
+
+  const NAV = [
+    ["dashboard.html", "控制台"],
+    ["community.html", "面经社区"],
+    ["submit.html", "提交面经"],
+  ];
+
+  async function renderTopbar(active) {
+    const host = document.getElementById("topbar");
+    if (!host) return;
+    host.innerHTML =
+      '<header class="nav"><div class="nav-inner">' +
+      '<a class="nav-brand" href="' + pageHref("landing.html") + '">🤖 InterviewRadar</a>' +
+      '<nav class="nav-links">' +
+      NAV.map(([href, name]) =>
+        '<a href="' + pageHref(href) + '"' + (href === active ? ' class="active"' : "") + ">" + name + "</a>"
+      ).join("") +
+      "</nav>" +
+      '<div class="nav-user" id="navUser"></div>' +
+      "</div></header>";
+    const userBox = document.getElementById("navUser");
+    if (!getToken()) {
+      userBox.innerHTML =
+        '<a class="btn sm secondary" href="' + pageHref("auth.html") + '">登录</a>' +
+        '<a class="btn sm primary" href="' + pageHref("auth.html?mode=register") + '">免费注册</a>';
+      return;
+    }
+    try {
+      const d = await api("auth/me");
+      const u = d.user;
+      userBox.innerHTML =
+        '<span class="nick">' + escapeHtml(u.nickname || u.email) + "</span>" +
+        '<a class="logout" href="#" id="logoutBtn">退出</a>';
+      document.getElementById("logoutBtn").addEventListener("click", e => {
+        e.preventDefault();
+        logout();
+      });
+    } catch (e) { /* 401 时 api() 已跳转 */ }
+  }
+
+  async function logout() {
+    try { await api("auth/logout", "POST", {}); } catch (e) {}
+    setToken("");
+    location.href = pageHref("landing.html");
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function fmtDate(s) {
+    if (!s) return "";
+    return String(s).slice(0, 10);
+  }
+
+  return { api, getToken, setToken, requireAuth, toast, renderTopbar, logout, escapeHtml, fmtDate, pageHref };
+})();
+
+</script>
+  <script>IR.renderTopbar("");</script>
+</body>
+</html>

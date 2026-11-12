@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 494" width="960" height="494">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a2b3a"/>
+      <stop offset="0.55" stop-color="#3d3e52"/>
+      <stop offset="1" stop-color="#282938"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a3f5e"/>
+      <stop offset="1" stop-color="#23263c"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffdf9e" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffdf9e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="960" height="494" fill="url(#bg)"/>
+
+  <!-- 背景：书架与绿植剪影 -->
+  <g opacity="0.35">
+    <rect x="700" y="150" width="180" height="14" rx="4" fill="#191a26"/>
+    <rect x="700" y="250" width="180" height="14" rx="4" fill="#191a26"/>
+    <rect x="712" y="110" width="16" height="40" rx="3" fill="#232433"/>
+    <rect x="734" y="118" width="14" height="32" rx="3" fill="#232433"/>
+    <rect x="756" y="106" width="18" height="44" rx="3" fill="#232433"/>
+    <rect x="716" y="212" width="15" height="38" rx="3" fill="#232433"/>
+    <rect x="738" y="206" width="17" height="44" rx="3" fill="#232433"/>
+    <ellipse cx="160" cy="330" rx="60" ry="90" fill="#1d2b22"/>
+    <ellipse cx="120" cy="300" rx="34" ry="60" fill="#20301f"/>
+    <rect x="150" y="380" width="22" height="60" rx="6" fill="#241f18"/>
+  </g>
+
+  <!-- 暖色台灯光晕 -->
+  <circle cx="660" cy="180" r="150" fill="url(#lamp)"/>
+  <rect x="640" y="150" width="40" height="26" rx="8" fill="#14151f" opacity="0.8"/>
+  <rect x="656" y="176" width="8" height="90" fill="#14151f" opacity="0.8"/>
+
+  <!-- 面试官半身剪影 -->
+  <g>
+    <path d="M480 500 L480 470 C420 462 360 448 340 420 C330 406 336 388 352 380 C396 358 436 350 480 350 C524 350 564 358 608 380 C624 388 630 406 620 420 C600 448 540 462 480 470 Z" fill="url(#shirt)"/>
+    <path d="M480 350 L455 380 L480 396 L505 380 Z" fill="#d7b79a"/>
+    <path d="M455 380 L442 372 L480 396 L518 372 L505 380 L480 404 Z" fill="#e9e9f2" opacity="0.9"/>
+    <ellipse cx="480" cy="272" rx="76" ry="88" fill="#e3c1a5"/>
+    <path d="M404 262 C402 196 440 162 480 162 C520 162 558 196 556 262 C556 236 540 214 526 212 C536 236 530 246 528 250 C524 216 502 206 480 206 C458 206 436 216 432 250 C430 246 424 236 434 212 C420 214 404 236 404 262 Z" fill="#2b2118"/>
+    <ellipse cx="404" cy="286" rx="10" ry="16" fill="#e3c1a5"/>
+    <ellipse cx="556" cy="286" rx="10" ry="16" fill="#e3c1a5"/>
+    <ellipse cx="452" cy="282" rx="9" ry="6" fill="#fff"/>
+    <ellipse cx="508" cy="282" rx="9" ry="6" fill="#fff"/>
+    <circle cx="452" cy="283" r="3.4" fill="#3a2c22"/>
+    <circle cx="508" cy="283" r="3.4" fill="#3a2c22"/>
+    <path d="M438 268 C444 262 458 262 464 266" stroke="#4a382c" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M496 266 C502 262 516 262 522 268" stroke="#4a382c" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M474 296 C476 302 484 302 486 296" stroke="#c59d7f" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M458 322 C470 332 490 332 502 322" stroke="#b98a6a" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

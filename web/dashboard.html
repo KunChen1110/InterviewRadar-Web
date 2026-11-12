@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>控制台 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="common.css">
+  <style>
+    .dash-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
+    .quick-actions { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    #scoreChart { width: 100%; height: 180px; display: block; }
+    .empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 30px 0; }
+    @media (max-width: 860px) { .dash-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+
+  <div class="container">
+    <div class="quick-actions">
+      <a class="btn primary" href="setup.html">🎙️ 开始模拟面试</a>
+      <a class="btn secondary" href="submit.html">📝 提交真实面经</a>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">∞</div><div class="stat-label">完整模拟面试</div></div>
+      <div class="stat-card"><div class="stat-num" id="statContribution">—</div><div class="stat-label">社区贡献值</div></div>
+      <div class="stat-card"><div class="stat-num" id="statSessions">—</div><div class="stat-label">已完成面试</div></div>
+      <div class="stat-card"><div class="stat-num" id="statAvg">—</div><div class="stat-label">平均得分</div></div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="card">
+        <h3>成绩曲线</h3>
+        <canvas id="scoreChart"></canvas>
+        <div class="empty hidden" id="chartEmpty">还没有成绩数据，先去完成一场面试吧</div>
+      </div>
+      <div class="card">
+        <h3>自由练习</h3>
+        <div class="muted" style="line-height:1.8;">完整模拟面试免费不限次。每次练习都会保存在这里，方便你比较进步。</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>面试历史</h3>
+      <div class="row-list" id="historyList"></div>
+      <div class="empty hidden" id="historyEmpty">暂无面试记录</div>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    const IR_OK = IR.requireAuth();
+    IR.renderTopbar("dashboard.html");
+
+    function drawChart(scores) {
+      const canvas = document.getElementById("scoreChart");
+      const empty = document.getElementById("chartEmpty");
+      if (!scores.length) { empty.classList.remove("hidden"); canvas.classList.add("hidden"); return; }
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+      const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+      ctx.clearRect(0, 0, w, h);
+      const padL = 34 * devicePixelRatio, padR = 14 * devicePixelRatio, padT = 14 * devicePixelRatio, padB = 22 * devicePixelRatio;
+      const plotW = w - padL - padR, plotH = h - padT - padB;
+      ctx.strokeStyle = "#e8e9f2"; ctx.fillStyle = "#8a8ca3";
+      ctx.font = (10 * devicePixelRatio) + "px sans-serif"; ctx.lineWidth = devicePixelRatio;
+      [0, 25, 50, 75, 100].forEach(v => {
+        const y = padT + plotH * (1 - v / 100);
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
+        ctx.fillText(v, 6 * devicePixelRatio, y + 3 * devicePixelRatio);
+      });
+      const pts = scores.map((v, i) => ({
+        x: padL + (scores.length === 1 ? plotW / 2 : plotW * i / (scores.length - 1)),
+        y: padT + plotH * (1 - v / 100),
+      }));
+      ctx.strokeStyle = "#6c5ce7"; ctx.lineWidth = 2 * devicePixelRatio;
+      ctx.beginPath();
+      pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.stroke();
+      pts.forEach((p, i) => {
+        ctx.fillStyle = "#6c5ce7";
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3.5 * devicePixelRatio, 0, 7); ctx.fill();
+        ctx.fillStyle = "#23243a";
+        ctx.fillText(scores[i], p.x - 8 * devicePixelRatio, p.y - 8 * devicePixelRatio);
+      });
+    }
+
+    (async () => {
+      if (!IR_OK) return;
+      try {
+        const me = await IR.api("auth/me");
+        const u = me.user;
+        const history = me.history || [];
+        const finished = history.filter(h => h.overall != null);
+        document.getElementById("statContribution").textContent = u.contribution || 0;
+        document.getElementById("statSessions").textContent = finished.length;
+        document.getElementById("statAvg").textContent = finished.length
+          ? Math.round(finished.reduce((a, h) => a + h.overall, 0) / finished.length) : "—";
+        const list = document.getElementById("historyList");
+        if (!history.length) document.getElementById("historyEmpty").classList.remove("hidden");
+        history.forEach(h => {
+          const row = document.createElement("div");
+          row.className = "row";
+          const status = h.overall != null
+            ? '<span class="tag ok">已完成 ' + h.overall + " 分</span>"
+            : '<span class="tag pending">可继续</span>';
+          row.innerHTML = "<div><b>" + IR.escapeHtml(h.role || "模拟面试") + "</b> "
+            + '<span class="tag ok">完整模拟</span>'
+            + '<div class="muted">' + IR.fmtDate(h.created_at) + "</div></div>"
+            + "<div style='display:flex;gap:10px;align-items:center'>" + status
+            + (h.overall != null
+              ? '<a class="btn sm secondary" href="report.html?sid=' + h.sid + '">看报告</a>'
+              : '<a class="btn sm primary" href="interview.html?sid=' + h.sid + '">继续面试</a>')
+            + "</div>";
+          list.appendChild(row);
+        });
+        drawChart(finished.slice().reverse().map(h => h.overall));
+      } catch (err) {
+        IR.toast(err.message, true);
+      }
+    })();
+  </script>
+</body>
+</html>

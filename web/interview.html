@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模拟面试间 - InterviewRadar</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+  <link rel="stylesheet" href="interviewer-avatar.css">
+  <script defer src="interviewer-avatar.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --purple: #6c5ce7; --purple-dark: #5a4bd1; --purple-light: #efeafd;
+      --bg: #f4f5fa; --card: #ffffff; --text: #23243a; --muted: #8a8ca3;
+      --border: #e8e9f2; --red: #e5534b; --orange: #f5a623; --green: #2fbf71;
+    }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+    button { font: inherit; cursor: pointer; border: none; background: none; }
+    input, textarea, select { font: inherit; }
+    .hidden { display: none !important; }
+
+    .app { max-width: 1440px; margin: 0 auto; padding: 14px 22px 20px; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 2px 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; color: var(--purple); text-decoration: none; }
+    .brand .logo { width: 34px; height: 34px; border-radius: 10px; background: var(--purple); color: #fff; display: grid; place-items: center; font-size: 18px; }
+    .top-right { display: flex; align-items: center; gap: 12px; }
+    .live-badge { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 7px 16px; font-size: 14px; color: var(--text); }
+    .live-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: blink 1.2s infinite; }
+    @keyframes blink { 50% { opacity: .25; } }
+    .icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: #fff; font-size: 16px; }
+    .end-btn { border: 1.5px solid var(--red); color: var(--red); border-radius: 10px; padding: 8px 18px; font-size: 14px; font-weight: 600; background: #fff; }
+    .end-btn:hover { background: #fdf0ef; }
+
+
+    .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+    .card { background: var(--card); border-radius: 16px; padding: 18px; box-shadow: 0 1px 3px rgba(30,30,60,.05); }
+    .card h3 { font-size: 15px; margin-bottom: 12px; }
+    .muted { color: var(--muted); font-weight: 400; font-size: 12px; }
+    .desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    .left { display: flex; flex-direction: column; gap: 16px; }
+    .stage { display: flex; gap: 12px; padding: 13px 12px; border-radius: 12px; margin-bottom: 6px; transition: background .2s; }
+    .stage .num { width: 26px; height: 26px; border-radius: 50%; background: #eceef6; color: var(--muted); display: grid; place-items: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+    .stage .stage-name { font-size: 14px; font-weight: 600; }
+    .stage .stage-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .stage.active { background: var(--purple-light); }
+    .stage.active .num { background: var(--purple); color: #fff; }
+    .stage.active .stage-name { color: var(--purple); }
+    .stage.done .num { background: var(--green); color: #fff; }
+    .stage .mini-wave { margin-top: 8px; height: 14px; display: flex; align-items: flex-end; gap: 2px; }
+    .stage .mini-wave i { width: 3px; background: var(--purple); border-radius: 2px; opacity: .7; animation: mw 1s ease-in-out infinite; }
+    @keyframes mw { 0%,100% { height: 4px; } 50% { height: 13px; } }
+    .tips-card p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+    .center { display: flex; flex-direction: column; gap: 16px; }
+    .video-area { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 16 / 8.2; background: linear-gradient(135deg, #262733, #3a3b4d 55%, #2b2c3c); }
+    .interviewer-scene { position: absolute; inset: 0; display: grid; place-items: center; }
+    .interviewer-scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .avatar-ring { width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), #9b8cf5); display: grid; place-items: center; box-shadow: 0 0 0 12px rgba(108,92,231,.18); position: relative; z-index: 1; }
+    .avatar-ring .avatar-face { font-size: 44px; font-weight: 700; color: #fff; }
+    .video-area.speaking .avatar-ring { animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 10px rgba(108,92,231,.16); } 50% { box-shadow: 0 0 0 22px rgba(108,92,231,.28); } }
+    .tag { position: absolute; display: flex; align-items: center; gap: 7px; background: rgba(20,20,30,.55); color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 999px; backdrop-filter: blur(4px); z-index: 2; }
+    .tag-ai { top: 16px; left: 16px; }
+    .sound-bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+    .sound-bars i { width: 3px; height: 4px; background: var(--green); border-radius: 2px; }
+    .video-area.speaking .sound-bars i { animation: mw .8s ease-in-out infinite; }
+    .sound-bars i:nth-child(2) { animation-delay: .15s; }
+    .sound-bars i:nth-child(3) { animation-delay: .3s; }
+    .pip { position: absolute; top: 16px; right: 16px; width: 210px; aspect-ratio: 4/3; border-radius: 14px; overflow: hidden; background: #101018; border: 2px solid rgba(255,255,255,.15); z-index: 2; }
+    .pip video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .pip-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 30px; font-weight: 600; background: linear-gradient(135deg, #4a4b62, #33344a); }
+    .pip .tag { top: 8px; right: 8px; font-size: 11px; padding: 4px 10px; }
+    .subtitle { position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; width: min(640px, 86%); display: flex; gap: 12px; align-items: flex-start; background: rgba(15,15,25,.62); border-radius: 14px; padding: 15px 18px; backdrop-filter: blur(6px); z-index: 2; }
+    .subtitle .sub-bot { width: 34px; height: 34px; border-radius: 50%; background: var(--purple); display: grid; place-items: center; font-size: 17px; flex-shrink: 0; }
+    .subtitle p { color: #fff; font-size: 15px; line-height: 1.65; }
+
+    .voice-console { text-align: center; padding: 22px 26px 18px; }
+    .voice-status { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 12px; }
+    #waveCanvas { width: 100%; height: 56px; display: block; }
+    .rec-timer { font-size: 15px; color: var(--purple); font-weight: 600; margin: 6px 0 10px; font-variant-numeric: tabular-nums; }
+    .mic-btn { width: 62px; height: 62px; border-radius: 50%; background: var(--purple); color: #fff; font-size: 26px; display: inline-grid; place-items: center; box-shadow: 0 6px 18px rgba(108,92,231,.35); transition: transform .12s, background .2s; }
+    .mic-btn:hover { background: var(--purple-dark); }
+    .mic-btn.recording { background: var(--red); box-shadow: 0 6px 18px rgba(229,83,75,.4); animation: recPulse 1.2s infinite; }
+    @keyframes recPulse { 50% { transform: scale(1.07); } }
+    .mic-hint { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+    .transcript { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 18px; line-height: 1.5; }
+    .transcript b { color: var(--text); font-weight: 600; }
+    .feedback-line { font-size: 12.5px; color: var(--purple-dark); margin-top: 4px; min-height: 16px; }
+    .text-fallback { margin-top: 12px; display: flex; gap: 10px; }
+    .text-fallback textarea { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; resize: none; font-size: 14px; }
+    .btn-primary { background: var(--purple); color: #fff; border-radius: 10px; padding: 0 20px; font-weight: 600; }
+    .type-link { font-size: 12px; color: var(--purple); margin-top: 8px; display: inline-block; }
+    .privacy { text-align: center; font-size: 12.5px; color: var(--muted); padding-bottom: 6px; }
+
+    .right { display: flex; flex-direction: column; gap: 16px; }
+    .pill { display: inline-block; background: var(--purple-light); color: var(--purple); font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 4px 12px; margin-bottom: 8px; }
+    .anchor-row { display: flex; gap: 10px; align-items: flex-start; }
+    .doc-icon { width: 34px; height: 34px; border-radius: 9px; background: var(--purple-light); display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+    .anchor-title { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+    .score-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; color: var(--text); }
+    .stars { letter-spacing: 2px; font-size: 14px; }
+    .stars .on { color: var(--orange); }
+    .stars .off { color: #dcdce6; }
+    .overall { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 14px; font-weight: 600; }
+    .overall b { font-size: 24px; color: var(--purple); font-variant-numeric: tabular-nums; }
+    .overall b span { font-size: 13px; color: var(--muted); font-weight: 400; }
+    .tips-list { list-style: none; }
+    .tips-list li { display: flex; gap: 9px; font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 10px; }
+    .tips-list li i { font-style: normal; color: var(--purple); flex-shrink: 0; }
+    .info-row { font-size: 13px; color: var(--muted); padding: 3px 0; }
+    .info-row b { color: var(--text); font-weight: 600; }
+    .gen-by { margin-top: 10px; font-size: 12px; color: var(--muted); }
+    .source-notice { margin: 0 0 12px; padding: 9px 11px; border-radius: 9px; font-size: 12px; line-height: 1.5; }
+    .source-notice.rag { color: #336b50; background: #edf9f1; }
+    .source-notice.fallback { color: #755d1f; background: #fff8e7; }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+      .left { flex-direction: row; }
+      .left .card { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="dashboard.html"><div class="logo">🤖</div>InterviewRadar</a>
+      <div class="top-right">
+        <div class="live-badge"><span class="dot"></span>面试中&nbsp;<span id="topTimer">00:00</span></div>
+        <button class="icon-btn" id="ttsToggle" title="面试官语音朗读开关">🔊</button>
+        <button class="end-btn" id="endBtn">结束面试</button>
+      </div>
+    </header>
+
+
+    <main class="layout">
+      <aside class="left">
+        <section class="card">
+          <h3>面试进度</h3>
+          <div id="stageList"></div>
+        </section>
+        <section class="card tips-card">
+          <h3>💡 Tips</h3>
+          <p>AI 面试官会根据你的回答追问（每题追问次数有上限，自我介绍 1 次、其余最多 2 次），请尽量详细回答，多结合数据与案例。</p>
+        </section>
+      </aside>
+
+      <section class="center">
+        <div class="video-area" id="videoArea">
+          <div class="interviewer-scene">
+            <div id="ai-interviewer" class="ir-avatar" data-state="idle"
+                 data-avatar-src="../assets/interviewer-avatar.png"
+                 data-avatar-alt="InterviewRadar AI 面试官"></div>
+          </div>
+          <div class="tag tag-ai">
+            <span class="sound-bars"><i></i><i></i><i></i></span>AI 面试官
+          </div>
+          <div class="pip">
+            <video id="camVideo" autoplay muted playsinline></video>
+            <div class="pip-fallback" id="camFallback">你</div>
+            <div class="tag tag-you">你</div>
+          </div>
+          <div class="subtitle">
+            <div class="sub-bot">🤖</div>
+            <p id="subtitleText">正在加载面试…</p>
+          </div>
+        </div>
+
+        <div class="card voice-console">
+          <p class="voice-status" id="voiceStatus">准备开始…</p>
+          <canvas id="waveCanvas"></canvas>
+          <p class="rec-timer" id="recTimer">00:00</p>
+          <button class="mic-btn" id="micBtn" title="点击开始/结束回答">🎤</button>
+          <p class="mic-hint" id="micHint">点击麦克风开始回答，再点一次结束</p>
+          <button class="type-link" id="typeLink">不方便说话？点击打字回答</button>
+          <div class="text-fallback hidden" id="textFallback">
+            <textarea id="textAnswer" rows="2" placeholder="在此输入你的回答，Enter 发送"></textarea>
+            <button class="btn-primary" id="textSendBtn">发送</button>
+          </div>
+          <p class="transcript" id="transcript"></p>
+          <p class="feedback-line" id="feedbackLine"></p>
+        </div>
+
+        <p class="privacy">所有对话将实时转写用于理解，你的语音不会被用于训练模型</p>
+      </section>
+
+      <aside class="right">
+        <section class="card">
+          <h3>当前考察点</h3>
+          <p id="sourceNotice" class="source-notice hidden"></p>
+          <span class="pill" id="focusTag">—</span>
+          <p class="desc" id="focusDesc">—</p>
+          <p class="gen-by" id="retrievalInfo"></p>
+        </section>
+        <section class="card">
+          <h3>关联简历</h3>
+          <div class="anchor-row">
+            <div class="doc-icon">📄</div>
+            <div>
+              <p class="anchor-title" id="anchorTitle">—</p>
+              <p class="desc" id="anchorDesc">来自你的简历要点</p>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <h3>实时评分 <span class="muted">（仅供参考）</span></h3>
+          <div class="score-row"><span>表达清晰度</span><span class="stars" id="starsClarity"></span></div>
+          <div class="score-row"><span>技术深度</span><span class="stars" id="starsDepth"></span></div>
+          <div class="score-row"><span>逻辑思维</span><span class="stars" id="starsLogic"></span></div>
+          <div class="score-row"><span>项目可信度</span><span class="stars" id="starsProof"></span></div>
+          <div class="overall"><span>综合评分</span><b><span id="overallScore">—</span><span> / 100</span></b></div>
+        </section>
+        <section class="card">
+          <h3>面试小贴士</h3>
+          <ul class="tips-list">
+            <li><i>▣</i>回答尽量具体，结合数据和案例</li>
+            <li><i>▣</i>多使用 STAR 法则（情境-任务-行动-结果）</li>
+            <li><i>▣</i>思考后再回答，回答更准确</li>
+            <li><i>▣</i>遇到不确定的问题可以说明你的思考过程</li>
+          </ul>
+        </section>
+        <section class="card">
+          <h3>面试信息</h3>
+          <p class="info-row">岗位方向：<b id="infoRole">—</b></p>
+          <p class="info-row">面试时长：<b id="infoDuration">00:00</b></p>
+          <p class="info-row">问题进度：<b id="infoCount">—</b></p>
+          <p class="gen-by">由 InterviewRadar AI 面试官 生成</p>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = {
+      sid: null, role: "", kind: "full",
+      stages: [], currentStep: "", finished: false,
+      scores: { depth: 55, clarity: 55, logic: 55, proof: 55 },
+      startedAt: null, timerId: null,
+      ttsOn: true, speaking: false,
+      submitting: false,
+      recording: false, recStartedAt: null, recTimerId: null,
+      recorder: null, audioChunks: [], mediaStream: null, audioExt: "ogg", recMaxTimer: null,
+      analyser: null, audioCtx: null,
+    };
+
+    const STAGE_SUBS = {
+      "自我介绍": "了解背景和求职动机",
+      "项目深挖": "深入了解你的项目经历",
+      "能力匹配": "考察岗位核心能力",
+      "场景问题": "解决实际业务问题",
+      "面试复盘": "综合评价与改进建议",
+    };
+
+    function getToken() {
+      try { return localStorage.getItem("ir_token") || ""; } catch (e) { return ""; }
+    }
+
+    async function api(path, method, body) {
+      const opts = { method: method || "GET", headers: {} };
+      if (body !== undefined) {
+        opts.headers["Content-Type"] = "application/json";
+        opts.body = JSON.stringify(body);
+      }
+      const t = getToken();
+      if (t) opts.headers["Authorization"] = "Bearer " + t;
+      const resp = await fetch("../api/" + path, opts);
+      let data = {};
+      try { data = await resp.json(); } catch (e) {}
+      if (!resp.ok) {
+        if (resp.status === 401) {
+          location.href = "auth.html?next=" + encodeURIComponent("interview.html?sid=" + state.sid);
+          throw new Error("请先登录");
+        }
+        throw new Error(data.detail || ("请求失败 " + resp.status));
+      }
+      return data;
+    }
+
+    function fmt(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(Math.floor(sec % 60)).padStart(2, "0");
+      return m + ":" + s;
+    }
+
+    function startInterviewTimer() {
+      state.startedAt = Date.now();
+      state.timerId = setInterval(() => {
+        const t = fmt((Date.now() - state.startedAt) / 1000);
+        $("topTimer").textContent = t;
+        $("infoDuration").textContent = t;
+      }, 1000);
+    }
+
+    function renderStages(activeStep) {
+      const list = $("stageList");
+      list.innerHTML = "";
+      const activeIdx = state.stages.indexOf(activeStep);
+      state.stages.forEach((name, i) => {
+        const div = document.createElement("div");
+        div.className = "stage" + (i === activeIdx ? " active" : "") + (i < activeIdx ? " done" : "");
+        const wave = i === activeIdx
+          ? '<div class="mini-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>'
+          : "";
+        div.innerHTML = '<div class="num">' + (i + 1) + '</div><div><div class="stage-name">' + name +
+          '</div><div class="stage-sub">' + (STAGE_SUBS[name] || "") + '</div>' + wave + '</div>';
+        list.appendChild(div);
+      });
+    }
+
+    function starStr(v) {
+      const n = Math.max(0, Math.min(5, Math.round(v / 20)));
+      let out = "";
+      for (let i = 0; i < 5; i++) out += '<span class="' + (i < n ? "on" : "off") + '">★</span>';
+      return out;
+    }
+
+    function updateScores(scores) {
+      Object.assign(state.scores, scores);
+      $("starsClarity").innerHTML = starStr(state.scores.clarity);
+      $("starsDepth").innerHTML = starStr(state.scores.depth);
+      $("starsLogic").innerHTML = starStr(state.scores.logic);
+      $("starsProof").innerHTML = starStr(state.scores.proof);
+      const avg = Math.round((state.scores.clarity + state.scores.depth + state.scores.logic + state.scores.proof) / 4);
+      $("overallScore").textContent = avg;
+    }
+
+    function updateFocus(focus) {
+      if (!focus) return;
+      state.currentStep = focus.step || state.currentStep;
+      $("focusTag").textContent = focus.topic || "—";
+      $("focusDesc").textContent = focus.desc || "—";
+      const fields = {projects: "项目经历", skills: "技能", risks: "待澄清点"};
+      const matched = (focus.matched_profile_fields || []).map(x => fields[x] || x).join("、");
+      $("retrievalInfo").textContent = focus.retrieval_mode
+        ? "真实题库检索 · " + (matched ? "关联" + matched : "岗位与环节匹配") : "";
+      $("anchorTitle").textContent = focus.anchor || "整体简历";
+      renderStages(state.currentStep);
+    }
+
+    function showSourceNotice(data) {
+      const notice = $("sourceNotice");
+      const text = data.question_source_notice || "";
+      if (!text) { notice.classList.add("hidden"); return; }
+      notice.textContent = data.source_backed ? "✓ " + text : "提示：" + text;
+      notice.className = "source-notice " + (data.source_backed ? "rag" : "fallback");
+    }
+
+    function setSubtitle(text) { $("subtitleText").textContent = text; }
+    function setStatus(text) { $("voiceStatus").textContent = text; }
+    function setAvatar(s) { const a = $("ai-interviewer"); if (a) a.dataset.state = s; }
+
+    function speak(text) {
+      if (!state.ttsOn || !window.speechSynthesis) { state.speaking = false; $("videoArea").classList.remove("speaking"); setAvatar(state.recording ? "listening" : "idle"); return; }
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN"; u.rate = 1.05;
+      u.onstart = () => { state.speaking = true; $("videoArea").classList.add("speaking"); setStatus("AI 面试官正在说话…"); setAvatar("speaking"); };
+      u.onend = () => { state.speaking = false; $("videoArea").classList.remove("speaking"); if (!state.finished) setStatus("AI 面试官正在聆听…"); setAvatar(state.recording ? "listening" : "idle"); };
+      u.onerror = u.onend;
+      speechSynthesis.speak(u);
+    }
+
+    async function boot() {
+      state.sid = new URLSearchParams(location.search).get("sid");
+      if (!state.sid) { location.href = "setup.html"; return; }
+      if (!getToken()) {
+        location.href = "auth.html?next=" + encodeURIComponent("interview.html?sid=" + state.sid);
+        return;
+      }
+      try {
+        const plan = await api("sessions/" + state.sid + "/plan");
+        state.kind = "full";
+        const uniq = [];
+        (plan.plan || []).forEach(q => { if (!uniq.includes(q.step)) uniq.push(q.step); });
+        uniq.push("面试复盘");
+        state.stages = uniq;
+
+        const cur = await api("sessions/" + state.sid + "/current");
+        state.role = cur.role || "";
+        showSourceNotice(cur);
+        $("infoRole").textContent = state.role;
+        if (cur.scores) updateScores(cur.scores);
+        if (cur.progress) $("infoCount").textContent = cur.progress.idx + " / " + cur.progress.total;
+        if (cur.focus) updateFocus(cur.focus);
+        if (cur.question) { setSubtitle(cur.question); speak(cur.question); }
+        else if (cur.status === "finished") { await doFinish(); return; }
+        startInterviewTimer();
+        initCamera();
+      } catch (err) {
+        setStatus("加载失败：" + err.message);
+      }
+    }
+
+    async function submitAnswer(text) {
+      text = (text || "").trim();
+      if (!text || state.finished || state.submitting) return false;
+      state.submitting = true;
+      $("transcript").innerHTML = "<b>你：</b>" + escapeHtml(text);
+      setStatus("面试官正在评估你的回答…");
+      setAvatar("thinking");
+      try {
+        const d = await api("sessions/" + state.sid + "/answer", "POST", { answer: text });
+        $("feedbackLine").textContent = d.feedback ? "点评：" + d.feedback : "";
+        if (d.scores) updateScores(d.scores);
+        if (d.progress) {
+          let label = d.progress.idx + " / " + d.progress.total;
+          if (d.is_followup && d.follow_progress) label += " · 追问 " + d.follow_progress.used + "/" + d.follow_progress.cap;
+          $("infoCount").textContent = label;
+        }
+        if (d.next_focus) updateFocus(d.next_focus);
+        setSubtitle(d.interviewer_message);
+        speak(d.interviewer_message);
+        if (d.done) await doFinish();
+        return true;
+      } catch (err) {
+        setStatus("回答暂未保存：" + err.message + "。请检查内容后重试。");
+        return false;
+      } finally {
+        state.submitting = false;
+      }
+    }
+
+    async function doFinish() {
+      if (state.finished) return;
+      state.finished = true;
+      stopRecording();
+      cleanupCamera();
+      setStatus("本场面试已结束，正在生成复盘报告…");
+      renderStages("面试复盘");
+      try {
+        await api("sessions/" + state.sid + "/finish", "POST", {});
+        location.href = "report.html?sid=" + state.sid;
+      } catch (err) {
+        setStatus("生成报告失败：" + err.message);
+        state.finished = false;
+      }
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        $("camVideo").srcObject = stream;
+        $("camFallback").style.display = "none";
+        state.camStream = stream;
+      } catch (e) {
+        $("camFallback").style.display = "grid";
+      }
+    }
+
+    function cleanupCamera() {
+      if (state.camStream) {
+        state.camStream.getTracks().forEach(track => track.stop());
+        state.camStream = null;
+      }
+    }
+
+    async function startRecording() {
+      if (!window.MediaRecorder || !navigator.mediaDevices) { showTextInput(); return; }
+      state.audioChunks = [];
+      $("transcript").textContent = "";
+      $("feedbackLine").textContent = "";
+      try {
+        state.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = state.audioCtx.createMediaStreamSource(state.mediaStream);
+        state.analyser = state.audioCtx.createAnalyser();
+        state.analyser.fftSize = 128;
+        src.connect(state.analyser);
+        const ogg = "audio/ogg;codecs=opus";
+        const webm = "audio/webm;codecs=opus";
+        const mimeType = MediaRecorder.isTypeSupported(ogg) ? ogg : (MediaRecorder.isTypeSupported(webm) ? webm : "");
+        state.audioExt = mimeType.includes("webm") ? "webm" : "ogg";
+        state.recorder = mimeType ? new MediaRecorder(state.mediaStream, { mimeType }) : new MediaRecorder(state.mediaStream);
+        state.recorder.ondataavailable = e => { if (e.data.size) state.audioChunks.push(e.data); };
+        state.recorder.onstop = transcribeRecording;
+        state.recorder.start();
+      } catch (e) { showTextInput(); setStatus("无法录音，请直接输入回答"); return; }
+      state.recording = true;
+      state.recStartedAt = Date.now();
+      setAvatar("listening");
+      $("micBtn").classList.add("recording");
+      $("micHint").textContent = "说话中…再点一次麦克风结束回答";
+      setStatus("正在聆听你的回答…");
+      state.recTimerId = setInterval(() => {
+        $("recTimer").textContent = fmt((Date.now() - state.recStartedAt) / 1000);
+      }, 500);
+      state.recMaxTimer = setTimeout(() => {
+        if (state.recording) {
+          setStatus("单次语音回答最长 55 秒，已自动结束录音");
+          stopRecording();
+        }
+      }, 55 * 1000);
+    }
+
+    function stopRecording() {
+      if (!state.recording) return;
+      state.recording = false;
+      clearInterval(state.recTimerId);
+      clearTimeout(state.recMaxTimer);
+      $("micBtn").classList.remove("recording");
+      $("micHint").textContent = "点击麦克风开始回答，再点一次结束";
+      try { state.recorder && state.recorder.state !== "inactive" && state.recorder.stop(); } catch (e) {}
+    }
+
+    async function transcribeRecording() {
+      const blob = new Blob(state.audioChunks, { type: state.recorder?.mimeType || "audio/ogg" });
+      if (!blob.size) { cleanupAudio(); setAvatar("idle"); setStatus("没有录到声音，请再试一次或改用打字"); return; }
+      const fd = new FormData();
+      fd.append("file", blob, "answer." + state.audioExt);
+      setStatus("正在转写，请核对后发送…");
+      try {
+        const t = getToken();
+        const response = await fetch("../api/sessions/" + state.sid + "/transcribe", {
+          method: "POST", headers: t ? { "Authorization": "Bearer " + t } : {}, body: fd,
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "转写失败");
+        $("textFallback").classList.remove("hidden");
+        $("typeLink").classList.add("hidden");
+        $("textAnswer").value = data.text || "";
+        $("textAnswer").focus();
+        $("transcript").innerHTML = "<b>转写结果：</b>请编辑后发送";
+        setStatus("请核对转写内容后发送"); setAvatar("idle");
+      } catch (e) {
+        setStatus("转写暂不可用，请直接输入回答"); setAvatar("idle"); showTextInput();
+      } finally {
+        cleanupAudio();
+      }
+    }
+
+    function cleanupAudio() {
+      if (state.mediaStream) { state.mediaStream.getTracks().forEach(t => t.stop()); state.mediaStream = null; }
+      if (state.audioCtx) { state.audioCtx.close().catch(() => {}); state.audioCtx = null; }
+      state.analyser = null;
+      state.recorder = null;
+      state.audioChunks = [];
+    }
+
+    function showTextInput() {
+      $("textFallback").classList.remove("hidden");
+      $("typeLink").classList.add("hidden");
+      $("textAnswer").focus();
+    }
+
+    window.addEventListener("pagehide", () => {
+      stopRecording();
+      cleanupAudio();
+      cleanupCamera();
+    });
+
+    async function sendTextAnswer() {
+      const t = $("textAnswer").value.trim();
+      if (!t) return;
+      const accepted = await submitAnswer(t);
+      if (accepted) $("textAnswer").value = "";
+    }
+
+    // 语音波纹动画
+    const canvas = $("waveCanvas");
+    const ctx2d = canvas.getContext("2d");
+    const BAR_COUNT = 56;
+    function drawWave() {
+      const w = canvas.width = canvas.clientWidth * devicePixelRatio;
+      const h = canvas.height = canvas.clientHeight * devicePixelRatio;
+      ctx2d.clearRect(0, 0, w, h);
+      const barW = w / BAR_COUNT;
+      let freq = null;
+      if (state.recording && state.analyser) {
+        freq = new Uint8Array(state.analyser.frequencyBinCount);
+        state.analyser.getByteFrequencyData(freq);
+      }
+      const t = Date.now() / 1000;
+      for (let i = 0; i < BAR_COUNT; i++) {
+        let ratio;
+        if (freq) {
+          ratio = freq[Math.floor(i * freq.length / BAR_COUNT)] / 255;
+        } else if (state.speaking) {
+          ratio = 0.25 + 0.55 * Math.abs(Math.sin(t * 5 + i * 0.55)) * (0.6 + 0.4 * Math.sin(i * 1.7));
+        } else {
+          ratio = 0.08 + 0.05 * Math.sin(t * 1.5 + i * 0.4);
+        }
+        const bh = Math.max(3 * devicePixelRatio, ratio * h * 0.9);
+        const x = i * barW + barW * 0.25;
+        ctx2d.fillStyle = state.recording ? "#e5534b" : "#6c5ce7";
+        ctx2d.globalAlpha = freq || state.speaking ? 0.9 : 0.45;
+        roundBar(x, (h - bh) / 2, barW * 0.5, bh, barW * 0.25);
+      }
+      ctx2d.globalAlpha = 1;
+      requestAnimationFrame(drawWave);
+    }
+    function roundBar(x, y, w, h, r) {
+      ctx2d.beginPath();
+      ctx2d.moveTo(x + r, y);
+      ctx2d.arcTo(x + w, y, x + w, y + h, r);
+      ctx2d.arcTo(x + w, y + h, x, y + h, r);
+      ctx2d.arcTo(x, y + h, x, y, r);
+      ctx2d.arcTo(x, y, x + w, y, r);
+      ctx2d.fill();
+    }
+    drawWave();
+
+    // 事件绑定
+    $("endBtn").addEventListener("click", doFinish);
+    $("micBtn").addEventListener("click", () => { state.recording ? stopRecording() : startRecording(); });
+    $("typeLink").addEventListener("click", showTextInput);
+    $("textSendBtn").addEventListener("click", sendTextAnswer);
+    $("textAnswer").addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendTextAnswer(); }
+    });
+    $("ttsToggle").addEventListener("click", () => {
+      state.ttsOn = !state.ttsOn;
+      $("ttsToggle").textContent = state.ttsOn ? "🔊" : "🔇";
+      if (!state.ttsOn && window.speechSynthesis) speechSynthesis.cancel();
+    });
+    if (!window.MediaRecorder || !navigator.mediaDevices) {
+      $("micBtn").classList.add("hidden");
+      $("micHint").textContent = "当前浏览器不支持录音，请直接打字回答";
+      showTextInput();
+    }
+    updateScores(state.scores);
+    boot();
+  </script>
+</body>
+</html>

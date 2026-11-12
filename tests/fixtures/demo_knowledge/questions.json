@@ -1,0 +1,16 @@
+[
+  {"id":"sample-ai-01","role":"AI 产品经理","stage":"自我介绍","topic":"产品思考","question":"请介绍你最能体现产品判断力的一段经历。","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ai-02","role":"AI 产品经理","stage":"项目深挖","topic":"项目复盘","question":"在你负责的项目中，你如何验证最初的问题定义？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ai-03","role":"AI 产品经理","stage":"项目深挖","topic":"需求分析","question":"请举例说明你如何处理互相冲突的用户需求。","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ai-04","role":"AI 产品经理","stage":"能力匹配","topic":"用户研究","question":"你会怎样设计用户访谈以识别真实使用障碍？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ai-05","role":"AI 产品经理","stage":"能力匹配","topic":"效果评估","question":"你如何设定新功能上线后的核心指标和护栏指标？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ai-06","role":"AI 产品经理","stage":"场景问题","topic":"风险处理","question":"如果模型回答不稳定，你会如何安排灰度和回退？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ai-07","role":"AI 产品经理","stage":"场景问题","topic":"资源取舍","question":"如果开发资源不足，你如何选择下一迭代的优先事项？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-01","role":"运营策划","stage":"自我介绍","topic":"岗位动机","question":"请介绍一段最能说明你适合运营策划的经历。","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-02","role":"运营策划","stage":"项目深挖","topic":"项目复盘","question":"你在增长项目中如何确定目标人群和活动目标？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-03","role":"运营策划","stage":"项目深挖","topic":"数据分析","question":"请用一个项目说明你如何分析转化漏斗中的流失点。","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-04","role":"运营策划","stage":"能力匹配","topic":"活动策划","question":"你会如何选择一次校园活动的推广渠道？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-05","role":"运营策划","stage":"能力匹配","topic":"实验设计","question":"怎样设计 A/B 测试以判断新文案是否有效？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-06","role":"运营策划","stage":"场景问题","topic":"转化诊断","question":"如果报名量上升但到场率下降，你会如何定位原因？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]},
+  {"id":"sample-ops-07","role":"运营策划","stage":"场景问题","topic":"跨团队协作","question":"如果设计资源临时缺席，你会如何调整活动上线计划？","frequency":1,"_sources":[{"name":"合成测试题","url":"","note":"原创测试数据，非真实面经"}]}
+]

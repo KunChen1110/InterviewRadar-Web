@@ -1,0 +1,78 @@
+[
+  {
+    "id": "ai-product-keyword",
+    "role": "AI 产品经理",
+    "mode": "normal",
+    "profile": {
+      "summary": "有两年 AI 应用产品实习经验，负责招聘助手从调研到上线。",
+      "skills": [
+        "Python",
+        "SQL",
+        "A/B 测试",
+        "用户研究"
+      ],
+      "projects": [
+        {
+          "name": "校园招聘智能助手",
+          "stack": [
+            "LLM",
+            "RAG",
+            "FastAPI"
+          ]
+        }
+      ],
+      "risks": [
+        "量化指标表达不足"
+      ]
+    }
+  },
+  {
+    "id": "operations-keyword",
+    "role": "运营策划",
+    "mode": "normal",
+    "profile": {
+      "summary": "有增长运营实习经验，负责招聘活动转化分析。",
+      "skills": [
+        "SQL",
+        "A/B 测试"
+      ],
+      "projects": [
+        {
+          "name": "校招活动增长项目",
+          "stack": [
+            "Python",
+            "指标体系"
+          ]
+        }
+      ],
+      "risks": [
+        "指标表达不足"
+      ]
+    }
+  },
+  {
+    "id": "backend-coverage-gap",
+    "role": "后端开发",
+    "mode": "normal",
+    "profile": {
+      "summary": "有 API 服务和数据库优化项目经验。",
+      "skills": [
+        "Python",
+        "MySQL",
+        "Redis"
+      ],
+      "projects": [
+        {
+          "name": "订单系统",
+          "stack": [
+            "FastAPI",
+            "PostgreSQL"
+          ]
+        }
+      ],
+      "risks": [
+        "高并发实践不足"
+      ]
+    }
+  }
+]
