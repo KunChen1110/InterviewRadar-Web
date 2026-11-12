@@ -10,8 +10,8 @@ from pathlib import Path
 import re
 import sys
 
-from embeddings import embed_texts
-from rag_schema import content_hash
+from .embeddings import embed_texts
+from .rag_schema import content_hash
 
 
 ALLOWED_LICENSES = {"MIT", "Apache-2.0", "user-authorized"}
@@ -120,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         documents = verify_release(args.documents, args.manifest)
-        import db
+        from . import db
 
         db.init_schema()
         if not db.is_ready():

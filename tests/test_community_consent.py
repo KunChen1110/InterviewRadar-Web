@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-import auth
+from backend import auth
 
 
 QUESTIONS = [

@@ -1,7 +1,7 @@
 import hashlib
 from datetime import date
 
-import auth
+from backend import auth
 from fastapi import HTTPException
 
 

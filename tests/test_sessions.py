@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-import main
+from backend import main
 
 
 def restored_session() -> dict:

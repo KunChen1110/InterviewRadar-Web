@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 # 本地/自托管时从 .env 加载密钥（平台预览/部署会自动注入环境变量，load 不覆盖已有值）
 try:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+    load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 except ImportError:
     pass
 
@@ -32,20 +32,13 @@ from fastapi import Depends, FastAPI, File, HTTPException, Request, Response, Up
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
-from config import load_settings
+from .config import load_settings
 
 SETTINGS = load_settings()
 
-import auth
-import asr
-import db
-import interview_plan
-import interview_memory
-import knowledge_plan
-import llm
-import profile
-from security import protect_public_beta
-from seed_questions import CS_TRACK, build_plan
+from . import auth, asr, db, interview_plan, interview_memory, knowledge_plan, llm, profile
+from .security import protect_public_beta
+from .seed_questions import CS_TRACK, build_plan
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -64,7 +57,7 @@ async def database_unavailable_handler(_request: Request, _exc: db.DatabaseUnava
     """Never leak database connection details or mistake an outage for bad credentials."""
     return JSONResponse(status_code=503, content={"detail": "服务暂时不可用，请稍后重试"})
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 会话运行时状态（进程内；持久化摘要落 sessions/turns/reports 表）
 SESSIONS: dict[str, dict] = {}

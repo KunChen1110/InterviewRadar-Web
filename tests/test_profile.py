@@ -1,4 +1,4 @@
-import profile
+from backend import profile
 
 
 def test_normalize_profile_keeps_only_bounded_structured_fields():

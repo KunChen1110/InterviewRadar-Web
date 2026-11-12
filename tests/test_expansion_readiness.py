@@ -1,7 +1,7 @@
 import threading
 
-import main
-import auth
+from backend import main
+from backend import auth
 from fastapi import HTTPException
 
 

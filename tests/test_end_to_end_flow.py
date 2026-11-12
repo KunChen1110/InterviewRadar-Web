@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-import main
+from backend import main
 
 
 def test_full_synthetic_text_interview_flow_survives_cache_recovery(monkeypatch):

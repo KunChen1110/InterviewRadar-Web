@@ -16,7 +16,7 @@ def load_config(monkeypatch, **values):
         monkeypatch.delenv(key, raising=False)
     for key, value in values.items():
         monkeypatch.setenv(key, value)
-    import config
+    from backend import config
 
     return importlib.reload(config)
 
@@ -97,6 +97,6 @@ def test_production_rejects_a_development_database_host(monkeypatch):
 
 
 def test_schema_includes_resume_minimization_migration():
-    import db
+    from backend import db
 
     assert "UPDATE sessions SET resume_text = ''" in "\n".join(db.DDL)

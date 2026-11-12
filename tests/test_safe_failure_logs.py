@@ -1,5 +1,5 @@
-import embeddings
-import llm
+from backend import embeddings
+from backend import llm
 
 
 def test_llm_failure_log_never_echoes_provider_error_text(capsys):

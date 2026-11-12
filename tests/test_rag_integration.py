@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-import main
+from backend import main
 
 
 def test_curated_plan_keeps_keyword_retrieval_evidence_for_each_question():

@@ -6,7 +6,7 @@ point at a small fixture instead of silently depending on a private checkout.
 
 from pathlib import Path
 
-import knowledge_plan
+from backend import knowledge_plan
 
 
 knowledge_plan.KNOWLEDGE_DIR = str(Path(__file__).parent / "fixtures" / "demo_knowledge")

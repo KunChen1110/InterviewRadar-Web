@@ -9,8 +9,8 @@ from __future__ import annotations
 import re
 import math
 
-from embeddings import cosine_similarity
-from profile import project_names
+from .embeddings import cosine_similarity
+from .profile import project_names
 
 
 def _terms(profile: dict) -> dict[str, list[str]]:

@@ -1,4 +1,4 @@
-from rag_release_import import prepare_import_rows
+from backend.rag_release_import import prepare_import_rows
 import json
 
 
@@ -83,7 +83,7 @@ def test_import_rejects_xiaohongshu_rows_without_declared_authorization():
 
 
 def test_database_import_params_store_pgvector_and_preserve_provenance():
-    from db import _manual_question_insert_params
+    from backend.db import _manual_question_insert_params
 
     params = _manual_question_insert_params({
         "question": "如何处理接口重复请求并保证幂等？",

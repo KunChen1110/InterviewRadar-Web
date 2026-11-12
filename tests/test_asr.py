@@ -1,4 +1,4 @@
-import asr
+from backend import asr
 
 
 def test_transcription_deletes_temporary_audio_after_provider_call(tmp_path, monkeypatch):

@@ -1,5 +1,5 @@
-from rag_evaluation import evaluate_cases
-import interview_plan
+from backend.rag_evaluation import evaluate_cases
+from backend import interview_plan
 
 
 def test_evaluation_reports_complete_source_backed_case():

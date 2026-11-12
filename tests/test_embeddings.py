@@ -1,4 +1,4 @@
-import embeddings
+from backend import embeddings
 
 
 def test_embedding_settings_are_disabled_without_explicit_embedding_model(monkeypatch):
@@ -41,7 +41,7 @@ def test_cosine_similarity_handles_missing_or_mismatched_vectors():
 
 
 def test_semantic_similarity_is_available_to_retrieval_evidence():
-    import retrieval
+    from backend import retrieval
     question = {"role": "产品运营", "stage": "项目深挖", "topic": "实验", "question": "如何设计实验？", "frequency": 1,
                 "embedding": [1.0, 0.0], "_sources": [{"name": "来源"}]}
     ranked = retrieval.rank_questions({"projects": [], "skills": [], "risks": []}, "产品运营", "项目深挖", [question], query_embedding=[1.0, 0.0])
@@ -50,7 +50,7 @@ def test_semantic_similarity_is_available_to_retrieval_evidence():
 
 
 def test_retrieval_query_contains_only_minimized_profile_fields():
-    import knowledge_plan
+    from backend import knowledge_plan
 
     query = knowledge_plan.retrieval_query(
         "产品运营", {"resume_text": "绝不能出现在检索文本的完整简历原文", "summary": "有实验经历", "skills": ["SQL"], "risks": ["指标口径"],
@@ -64,7 +64,7 @@ def test_retrieval_query_contains_only_minimized_profile_fields():
 
 
 def test_curated_questions_receive_embeddings_once_when_provider_is_available(monkeypatch):
-    import knowledge_plan
+    from backend import knowledge_plan
 
     monkeypatch.setattr(knowledge_plan, "_questions", [{"question": "如何设计增长实验？", "role": "产品运营", "topic": "实验"}])
     monkeypatch.setattr(knowledge_plan, "_curated_embeddings_ready", False)
@@ -80,7 +80,7 @@ def test_curated_questions_receive_embeddings_once_when_provider_is_available(mo
 
 
 def test_curated_embedding_failure_is_cooled_down_before_retry(monkeypatch):
-    import knowledge_plan
+    from backend import knowledge_plan
 
     monkeypatch.setattr(knowledge_plan, "_questions", [{"question": "如何设计增长实验？"}])
     monkeypatch.setattr(knowledge_plan, "_curated_embeddings_ready", False)
@@ -97,7 +97,7 @@ def test_curated_embedding_failure_is_cooled_down_before_retry(monkeypatch):
 
 
 def test_query_embedding_uses_the_same_provider_vector_dimension_as_the_curated_index(monkeypatch):
-    import knowledge_plan
+    from backend import knowledge_plan
 
     monkeypatch.setattr(knowledge_plan, "_loaded", True)
     monkeypatch.setattr(knowledge_plan, "_catalog", [{"role": "产品运营"}])

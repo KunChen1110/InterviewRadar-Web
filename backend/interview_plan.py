@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import re
 
-import knowledge_plan
-from profile import project_names
+from . import knowledge_plan
+from .profile import project_names
 
 
 def _terms(profile: dict) -> list[str]:

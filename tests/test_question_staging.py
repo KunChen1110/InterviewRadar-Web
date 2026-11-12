@@ -1,6 +1,6 @@
 import csv
 
-from question_staging import historical_questions_to_import_rows, write_import_csv
+from backend.question_staging import historical_questions_to_import_rows, write_import_csv
 
 
 def test_historical_questions_become_reviewable_import_rows(tmp_path):

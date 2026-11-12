@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-import main
+from backend import main
 
 
 USER = {"id": "persistent-user", "email": "candidate@example.com", "nickname": "候选人"}
@@ -128,7 +128,7 @@ def test_readiness_throttles_schema_retries_while_a_database_is_still_down(monke
 
 
 def test_auth_writes_do_not_claim_success_when_the_configured_database_rejects_them(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: None)
@@ -141,7 +141,7 @@ def test_auth_writes_do_not_claim_success_when_the_configured_database_rejects_t
 
 
 def test_registration_uses_one_atomic_user_and_token_write(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: None)
     calls = []
@@ -162,7 +162,7 @@ def test_registration_uses_one_atomic_user_and_token_write(monkeypatch):
 
 
 def test_registration_does_not_need_a_second_database_read_after_the_atomic_write(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: None)
@@ -182,7 +182,7 @@ def test_registration_does_not_need_a_second_database_read_after_the_atomic_writ
 
 
 def test_login_returns_the_user_fields_from_its_authenticated_lookup(monkeypatch):
-    import auth
+    from backend import auth
 
     row = {
         "id": "candidate-1", "email": "candidate@example.com", "nickname": "候选人",
@@ -206,7 +206,7 @@ def test_login_returns_the_user_fields_from_its_authenticated_lookup(monkeypatch
 
 
 def test_registration_concurrent_duplicate_is_reported_as_already_registered(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: None)
     monkeypatch.setattr(
@@ -236,7 +236,7 @@ def test_feedback_write_failure_is_a_safe_503(monkeypatch):
 
 
 def test_password_rotation_is_rejected_when_its_atomic_persistence_fails(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: {"password_hash": auth._hash_password("old-password")})
@@ -252,7 +252,7 @@ def test_password_rotation_is_rejected_when_its_atomic_persistence_fails(monkeyp
 
 
 def test_configured_database_does_not_accept_a_submission_without_an_insert(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "get_conn", lambda: None)
@@ -274,7 +274,7 @@ def test_configured_database_does_not_accept_a_submission_without_an_insert(monk
 
 
 def test_configured_database_does_not_claim_rejection_when_the_status_write_fails(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: {
@@ -289,7 +289,7 @@ def test_configured_database_does_not_claim_rejection_when_the_status_write_fail
 
 
 def test_configured_database_does_not_claim_account_deletion_without_a_transaction(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "delete_user_data", lambda _user_id: False)
@@ -301,7 +301,7 @@ def test_configured_database_does_not_claim_account_deletion_without_a_transacti
 
 
 def test_configured_database_does_not_mislabel_question_status_write_failure_as_not_found(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "set_question_active", lambda *_args: None)
@@ -313,7 +313,7 @@ def test_configured_database_does_not_mislabel_question_status_write_failure_as_
 
 
 def test_configured_database_does_not_confirm_a_manual_import_without_a_write(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "question_hashes", lambda _hashes: set())
@@ -330,7 +330,7 @@ def test_configured_database_does_not_confirm_a_manual_import_without_a_write(mo
 
 
 def test_manual_import_preview_survives_a_database_outage_for_safe_retry(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "question_hashes", lambda _hashes: set())
@@ -348,7 +348,7 @@ def test_manual_import_preview_survives_a_database_outage_for_safe_retry(monkeyp
 
 
 def test_configured_database_does_not_mislabel_approval_outage_as_invalid_questions(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: {

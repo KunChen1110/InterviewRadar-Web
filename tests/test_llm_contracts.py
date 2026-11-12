@@ -1,4 +1,4 @@
-import llm
+from backend import llm
 
 
 def test_turn_evaluation_falls_back_when_model_delta_is_not_an_object(monkeypatch):

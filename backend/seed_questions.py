@@ -6,7 +6,7 @@ build_plan 将改为"RAG 召回 + LLM 锚定"，本文件仅作兜底。
 """
 from __future__ import annotations
 
-from profile import project_names
+from .profile import project_names
 
 CS_TRACK = "cs"
 

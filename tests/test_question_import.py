@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-import rag_schema
+from backend import rag_schema
 
 
 def test_preview_validates_deduplicates_and_does_not_persist():
@@ -32,7 +32,7 @@ def test_preview_is_bound_to_owner_and_expires(monkeypatch):
 
 
 def test_admin_confirm_writes_only_previewed_rows(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "question_hashes", lambda hashes: set())
     captured = {}
@@ -53,7 +53,7 @@ def test_admin_confirm_writes_only_previewed_rows(monkeypatch):
 
 
 def test_admin_confirm_attaches_optional_embedding_to_approved_question(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "question_hashes", lambda hashes: set())
     monkeypatch.setattr(auth.embeddings, "embed_texts", lambda texts: [[0.25, 0.75]])
@@ -72,7 +72,7 @@ def test_admin_confirm_attaches_optional_embedding_to_approved_question(monkeypa
 
 
 def test_admin_question_status_change_invalidates_the_retrieval_cache(monkeypatch):
-    import auth
+    from backend import auth
 
     captured = {}
     monkeypatch.setattr(auth.db, "set_question_active", lambda question_id, active: captured.update(id=question_id, active=active) or True)
@@ -85,7 +85,7 @@ def test_admin_question_status_change_invalidates_the_retrieval_cache(monkeypatc
 
 
 def test_question_export_csv_keeps_review_fields_and_uses_utf8_bom():
-    import auth
+    from backend import auth
 
     output = auth.question_export_csv([{
         "question": "如何设计核心指标？", "tags": ["产品运营"], "source_name": "手工整理",

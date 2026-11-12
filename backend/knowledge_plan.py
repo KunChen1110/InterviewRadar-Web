@@ -1,7 +1,7 @@
 """知识库语料加载与组卷。
 
-数据来自用户 InterviewRadar pipeline 产出的 demo_knowledge：
-- questions.json：92 道真实面经题（含 stage/topic/来源 URL/证据/频次）
+可选的策展语料放在 knowledge/demo_knowledge（公开仓库不包含生产语料）：
+- questions.json：按岗位和环节标注、带来源信息的题目
 - role_packs.json：每个 环节×主题 的评估维度、追问模板、好答案信号
 - role_catalog.json：岗位元数据
 
@@ -17,12 +17,12 @@ import os
 import re
 import time
 
-from profile import project_names
-from retrieval import select_stage_questions
-import embeddings
-from embeddings import embed_one
+from .profile import project_names
+from .retrieval import select_stage_questions
+from . import embeddings
+from .embeddings import embed_one
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KNOWLEDGE_DIR = os.path.join(BASE_DIR, "knowledge", "demo_knowledge")
 
 _questions: list[dict] = []
@@ -86,9 +86,10 @@ def ensure_curated_embeddings() -> None:
 
 
 def curated_posts(role_filter: str = "") -> list[dict]:
-    """把策展的 92 道真实面经题按来源帖（source_url）分组为"面经帖"，
-    供面经社区冷启动展示。每道题的 evidence 是该帖里的原始题目行，
-    一组 source_url 就是一篇真实面经。"""
+    """把有来源 URL 的策展题按来源帖分组供社区展示。
+
+    没有外部策展语料时返回空列表；测试夹具没有真实来源 URL。
+    """
     _load()
     groups: dict[str, dict] = {}
     for q in _questions:
@@ -182,7 +183,7 @@ def _load_db_questions() -> None:
     if time.time() - _db_loaded_at < _DB_TTL:
         return
     _db_loaded_at = time.time()
-    import db
+    from . import db
     rows = db.fetchall(
         "SELECT question, tags, source_name, source_url, published_at, source_type, metadata, embedding::text AS embedding FROM questions "
         "WHERE (source_name LIKE %s OR source_type = %s) AND is_active = true ORDER BY id DESC LIMIT 5000",

@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-import main
-from auth import require_admin
+from backend import main
+from backend.auth import require_admin
 from fastapi import HTTPException
 
 
@@ -37,14 +37,14 @@ def test_non_operator_is_rejected(monkeypatch):
 
 
 def test_sensitive_account_and_admin_routes_have_a_rate_limit():
-    import security
+    from backend import security
 
     assert security._limit_for("/api/account/password") == ("/api/account/", 8)
     assert security._limit_for("/api/admin/metrics") == ("/api/admin/", 30)
 
 
 def test_rate_limits_target_expensive_or_sensitive_writes_not_normal_reads():
-    import security
+    from backend import security
 
     assert security._limit_for("/api/auth/login") == ("/api/auth/credentials", 12)
     assert security._limit_for("/api/auth/register") == ("/api/auth/credentials", 12)
@@ -63,7 +63,7 @@ def test_public_beta_adds_a_request_id_to_response_headers():
 
 
 def test_rate_limit_uses_the_nginx_real_ip_header_only_in_production(monkeypatch):
-    import security
+    from backend import security
 
     monkeypatch.setattr(security, "_is_production", lambda: True)
     assert security._client_key(type("Request", (), {
@@ -79,7 +79,7 @@ def test_rate_limit_uses_the_nginx_real_ip_header_only_in_production(monkeypatch
 
 
 def test_development_mode_does_not_apply_public_rate_limits(monkeypatch):
-    import security
+    from backend import security
 
     security._requests.clear()
     monkeypatch.setattr(security, "_is_production", lambda: False)
@@ -90,7 +90,7 @@ def test_development_mode_does_not_apply_public_rate_limits(monkeypatch):
 
 
 def test_production_does_not_throttle_normal_authenticated_read_endpoints(monkeypatch):
-    import security
+    from backend import security
 
     security._requests.clear()
     monkeypatch.setattr(security, "_is_production", lambda: True)

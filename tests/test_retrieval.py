@@ -1,4 +1,4 @@
-import retrieval
+from backend import retrieval
 
 
 def sourced(question, topic, text, frequency=1):

@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-import main
+from backend import main
 
 
 def test_report_export_is_authorized_and_contains_report(monkeypatch):
@@ -59,7 +59,7 @@ def test_account_deletion_requires_the_explicit_confirmation_phrase():
 
 
 def test_password_change_requires_current_password_and_invalidates_sessions(monkeypatch):
-    import auth
+    from backend import auth
 
     monkeypatch.setattr(auth.db, "DB_URL", "postgresql://configured")
     monkeypatch.setattr(auth.db, "fetchone", lambda *_args: {"password_hash": auth._hash_password("old-password")})

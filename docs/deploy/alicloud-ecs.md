@@ -51,7 +51,7 @@ curl -f http://127.0.0.1/ready
 `/ready` 返回 `{"status":"ready"}` 后，再运行一次版本化题库导入：
 
 ```bash
-docker compose exec -T app python rag_release_import.py \
+docker compose exec -T app python -m backend.rag_release_import \
   --manifest deploy/data/rag-v21/rag_import_manifest.json \
   --documents deploy/data/rag-v21/production_documents.jsonl
 ```

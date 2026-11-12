@@ -1,4 +1,4 @@
-import interview_plan
+from backend import interview_plan
 
 
 def test_personalized_first_question_uses_resume_project_and_real_source(monkeypatch):

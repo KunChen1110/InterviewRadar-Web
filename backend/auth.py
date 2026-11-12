@@ -16,12 +16,8 @@ import csv
 import io
 from datetime import date, datetime, timedelta, timezone
 
-import db
-import embeddings
-import knowledge_plan
-import profile
-import rag_schema
-from config import load_settings
+from . import db, embeddings, knowledge_plan, profile, rag_schema
+from .config import load_settings
 from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field, field_validator
@@ -220,7 +216,7 @@ def delete_account_data(body: AccountDeletionBody, user: dict = Depends(current_
         raise HTTPException(status_code=400, detail="请填写确认短语 DELETE_MY_ACCOUNT")
     if is_dev(user):
         # Import lazily to avoid the module cycle during application startup.
-        import main
+        from . import main
         main.SESSIONS = {
             sid: session for sid, session in main.SESSIONS.items()
             if session.get("user_id") != user["id"]
@@ -262,7 +258,7 @@ def change_password_endpoint(body: PasswordChangeBody, user: dict = Depends(curr
 def export_account_data(user: dict = Depends(current_user)) -> PlainTextResponse:
     """Download the caller's data only; raw resumes are never part of the export."""
     if is_dev(user):
-        import main
+        from . import main
         sessions = [
             {key: value for key, value in session.items() if key != "resume_text"}
             for session in main.SESSIONS.values() if session.get("user_id") == user["id"]
@@ -484,7 +480,7 @@ def admin_submissions(status: str = "pending", user: dict = Depends(require_admi
 @router.get("/admin/metrics")
 def admin_metrics(user: dict = Depends(require_admin)) -> dict:
     if is_dev(user):
-        import main
+        from . import main
         sessions = list(main.SESSIONS.values())
         feedback = list(main.DEV_FEEDBACK.values())
         return {

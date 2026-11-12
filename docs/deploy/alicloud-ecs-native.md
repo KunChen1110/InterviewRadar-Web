@@ -13,6 +13,13 @@ Nginx, and a Python virtual environment under `/opt/interviewradar`.
 - PostgreSQL: local Unix socket only; do not open port 5432 publicly
 - Nginx: public HTTP port 80, reverse-proxies to `127.0.0.1:8000`
 
+The Python service entry point in this public repository is
+`uvicorn backend.main:app`. Run the reviewed importer as
+`python -m backend.rag_release_import` from `/opt/interviewradar`.
+If replacing an older native installation that runs `uvicorn main:app`, update
+its systemd `ExecStart` to the new module path and reload the unit before
+restarting. This repository cleanup does not update an existing server.
+
 ## Configure credentials
 
 Edit `/etc/interviewradar.env` through the Aliyun Workbench terminal. Set

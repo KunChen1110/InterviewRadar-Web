@@ -2,7 +2,7 @@
 
 import time
 
-import knowledge_plan
+from backend import knowledge_plan
 
 
 def _seed_imported_roles(monkeypatch, roles):

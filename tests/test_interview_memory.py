@@ -1,4 +1,4 @@
-import interview_memory
+from backend import interview_memory
 
 
 def test_memory_extracts_missing_evidence_and_is_bounded():
